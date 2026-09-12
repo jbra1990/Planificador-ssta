@@ -513,6 +513,18 @@
   .field select { appearance: none; -webkit-appearance: none; }
   .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(53,224,240,.15); }
   .field textarea { resize: vertical; min-height: 70px; }
+  /* Campo de contraseña con botón para revelarla: la contraseña de cifrado no se puede
+     recuperar de ningún servidor, así que hay que poder consultarla en el equipo que ya
+     la tiene guardada para replicarla en otro dispositivo. */
+  .pwrap { position: relative; }
+  .pwrap input { padding-right: 82px; }
+  .pweye {
+    position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+    border: 1px solid var(--border-2); background: var(--card-2); color: var(--ink-2);
+    font-size: 11.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+    padding: 7px 10px; border-radius: 8px;
+  }
+  .pweye:hover { color: var(--ink); border-color: var(--cyan); }
   .frow { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .field.invalid input, .field.invalid select { border-color: var(--st-late); }
   .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
@@ -885,8 +897,11 @@
     </div>
     <div class="field">
       <label for="sy_pass">Contraseña de cifrado <span class="req">*</span></label>
-      <input type="password" id="sy_pass" placeholder="Mínimo 8 caracteres" autocomplete="new-password" />
-      <div class="hint">⚠️ Debe ser <strong>la misma en todos tus dispositivos</strong>. No se guarda en el servidor y no se puede recuperar: si la olvidas, los datos sincronizados no se pueden descifrar.</div>
+      <div class="pwrap">
+        <input type="password" id="sy_pass" placeholder="Mínimo 8 caracteres" autocomplete="new-password" />
+        <button type="button" class="pweye" id="sy_passEye" aria-pressed="false">Mostrar</button>
+      </div>
+      <div class="hint">⚠️ Debe ser <strong>la misma en todos tus dispositivos</strong>. No se guarda en el servidor y no se puede recuperar: si la olvidas, los datos sincronizados no se pueden descifrar. En un equipo que ya la tenga activada puedes consultarla con <strong>Mostrar</strong>.</div>
     </div>
   </div>
   <div class="sheet-f">
@@ -2046,6 +2061,12 @@
     el("sycloseSheet").addEventListener("click",closeSyncSheet);
     el("sysaveBtn").addEventListener("click",saveSyncSheet);
     el("sy_code").addEventListener("input",onLinkCodeInput);
+    el("sy_passEye").addEventListener("click",function(){
+      var i=el("sy_pass"), ver=i.type==="password";
+      i.type = ver ? "text" : "password";
+      this.textContent = ver ? "Ocultar" : "Mostrar";
+      this.setAttribute("aria-pressed", ver ? "true" : "false");
+    });
     el("setSyncCode").addEventListener("click",mostrarCodigo);
     el("setSyncNow").addEventListener("click",function(){ syncNow(); });
     el("setSyncOff").addEventListener("click",desactivarSync);
