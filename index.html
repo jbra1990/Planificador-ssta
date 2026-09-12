@@ -408,6 +408,18 @@
   .acc-btn svg { width: 15px; height: 15px; }
   .acc-btn:hover { background: rgba(53,224,240,.18); }
   .acc-btn.undo { border-color: var(--border-2); background: var(--card-2); color: var(--ink-2); }
+  .acc-acts { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+  .acc-acts .acc-btn { margin-left: 0; }
+  .acc-btn.pdf { border-color: var(--border-2); background: var(--card-2); color: var(--ink-2); padding: 9px 12px; }
+  .acc-btn.pdf:hover { color: var(--ink); border-color: var(--cyan); background: rgba(53,224,240,.12); }
+  /* Interruptor de dos estados: se ve cuál está activo y cuál es la otra opción. */
+  .rep-tg { display: inline-flex; border: 1px solid var(--border-2); border-radius: 10px; overflow: hidden; }
+  .rep-tg .rt { border: none; background: transparent; color: var(--muted); font-size: 12.5px; font-weight: 700; padding: 9px 12px; white-space: nowrap; }
+  .rep-tg .rt + .rt { border-left: 1px solid var(--border-2); }
+  .rep-tg .rt:hover { color: var(--ink-2); background: rgba(255,255,255,.05); }
+  .rep-tg .rt.on { background: rgba(52,211,153,.18); color: var(--st-plan); }
+  .rep-tg .rt:first-child.on { background: rgba(148,163,184,.20); color: var(--ink-2); }
+  @media (max-width: 520px) { .acc-foot { flex-wrap: wrap; } .acc-acts { width: 100%; margin-left: 0; } }
 
   .deadline-box { background: var(--card-2); border: 1px solid var(--border-2); border-radius: var(--r-sm); padding: 14px 15px; margin-bottom: 15px; }
   .dl-lab { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 700; }
@@ -656,11 +668,11 @@
       <div class="toolbar">
         <button class="btn primary" id="accNewBtn" style="flex:1 1 100%">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" width="17" height="17"><path d="M12 5v14M5 12h14"/></svg>
-          Registrar accidente
+          Registrar evento
         </button>
         <div class="chip"><select id="accFTipo" aria-label="Clasificación"><option value="">Todas las clasificaciones</option></select></div>
-        <div class="chip"><select id="accFSede" aria-label="Sede">
-          <option value="">Matriz y Regional Norte</option><option>Matriz</option><option>Regional Norte</option>
+        <div class="chip"><select id="accFSede" aria-label="Localidad">
+          <option value="">Toda localidad</option><option>Matriz</option><option>Regional Norte</option>
         </select></div>
         <div class="chip"><select id="accFEstado" aria-label="Estado">
           <option value="">Pendientes y reportados</option><option>Pendiente</option><option>Reportado</option>
@@ -923,34 +935,43 @@
   </div>
   <div class="sheet-b">
     <form id="aform" novalidate>
-      <div class="field" id="aw_nombre">
-        <label for="a_nombre">Nombre del accidentado <span class="req">*</span></label>
-        <input type="text" id="a_nombre" placeholder="Ej. Juan Pérez" />
-        <div class="err">Indica el nombre del accidentado.</div>
-      </div>
       <div class="field" id="aw_fecha">
-        <label for="a_fecha">Fecha del accidente <span class="req">*</span></label>
-        <input type="date" id="a_fecha" />
-        <div class="err">Indica la fecha del accidente.</div>
+        <label for="a_fecha">1. Fecha y hora <span class="req">*</span></label>
+        <div class="frow">
+          <input type="date" id="a_fecha" />
+          <input type="time" id="a_hora" />
+        </div>
+        <div class="err">Indica la fecha del evento.</div>
       </div>
       <div class="field">
-        <label for="a_tipo">Clasificación <span class="req">*</span></label>
-        <select id="a_tipo"></select>
-      </div>
-      <div class="frow">
-        <div class="field"><label for="a_sede">Sede</label>
+        <label for="a_sede">2. Localidad y área de trabajo</label>
+        <div class="frow">
           <select id="a_sede"><option>Matriz</option><option>Regional Norte</option></select>
+          <input type="text" id="a_area" placeholder="Área" />
         </div>
-        <div class="field"><label for="a_area">Área</label>
-          <input type="text" id="a_area" placeholder="Ej. Envasado" />
-        </div>
+      </div>
+      <div class="field" id="aw_nombre">
+        <label for="a_nombre">3. Nombres y apellidos <span class="req">*</span></label>
+        <input type="text" id="a_nombre" placeholder="Ej. Juan Pérez Mora" />
+        <div class="err">Indica los nombres y apellidos.</div>
+      </div>
+      <div class="field">
+        <label for="a_puesto">4. Puesto de trabajo</label>
+        <input type="text" id="a_puesto" placeholder="Ej. Operador de envasado" />
+      </div>
+      <div class="field">
+        <label for="a_desc">5. Descripción</label>
+        <textarea id="a_desc" placeholder="Qué ocurrió, parte del cuerpo afectada, atención brindada…"></textarea>
+      </div>
+      <div class="field">
+        <label for="a_tipo">6. Clasificación del evento <span class="req">*</span></label>
+        <select id="a_tipo"></select>
       </div>
       <div class="deadline-box" id="a_deadlineBox">
         <div class="dl-lab">Fecha máxima de reporte</div>
         <div class="dl-val" id="a_deadlineVal">—</div>
-        <div class="dl-note" id="a_deadlineNote">Selecciona la fecha del accidente para calcular el plazo.</div>
+        <div class="dl-note" id="a_deadlineNote">Selecciona la fecha del evento para calcular el plazo.</div>
       </div>
-      <div class="field"><label for="a_desc">Descripción del evento</label><textarea id="a_desc" placeholder="Qué ocurrió, parte del cuerpo afectada, atención brindada…"></textarea></div>
       <div class="field">
         <label for="a_estado">Estado del reporte</label>
         <select id="a_estado"><option>Pendiente</option><option>Reportado</option></select>
@@ -1003,6 +1024,13 @@
   function todayISO(){ return new Date().toISOString().slice(0,10); }
   function shiftDays(n){ var d=new Date(); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
   function fmtD(iso){ if(!iso) return "—"; var p=iso.split("-"); return p.length===3 ? p[2]+"/"+p[1]+"/"+p[0].slice(2) : iso; }
+  var MESES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+  // Fecha completa para documentos formales, donde 12/09/26 se presta a confusión.
+  function fmtLargo(iso){
+    if(!iso) return "—";
+    var p=iso.split("-"); if(p.length!==3) return iso;
+    return parseInt(p[2],10)+" de "+MESES[parseInt(p[1],10)-1]+" de "+p[0];
+  }
   function dueDate(it){ return it.cumplimiento || it.cierre || ""; }
   function isOverdue(it){ var d=dueDate(it); return d && it.estatus!=="Completada" && d<todayISO(); }
   function effStatus(it){ return isOverdue(it) ? "Atrasada" : it.estatus; }
@@ -1482,14 +1510,16 @@
   // ================= ACCIDENTES =================
   var ACC_KEY="sst_accidentes_v1", FER_KEY="sst_feriados_extra_v1";
   // Orden jerárquico (de mayor a menor severidad)
+  // El orden es jerárquico y define la prioridad con que se muestran y ordenan.
   var ACC_TIPOS=[
     { code:"EAI",  label:"EAI",  desc:"Accidente con incapacidad / ausentismo", color:"#FB6E85" },
     { code:"ETM",  label:"ETM",  desc:"Accidente con tratamiento médico",       color:"#F59E5B" },
     { code:"EPA",  label:"EPA",  desc:"Accidente de primeros auxilios",         color:"#FBBF24" },
     { code:"ITI",  label:"Itinere", desc:"In itinere (trayecto casa–trabajo)",  color:"#A78BFA" },
-    { code:"OCT",  label:"En otro centro de trabajo", desc:"Ocurrido en otro centro de trabajo", color:"#4E7EF4" },
-    { code:"DES",  label:"En desplazamiento", desc:"En desplazamiento / comisión de servicios", color:"#35E0F0" },
-    { code:"INC",  label:"Incidente", desc:"Incidente / casi-accidente (sin lesión)", color:"#94A3B8" }
+    { code:"INC",  label:"Incidente", desc:"Incidente / casi-accidente (sin lesión)", color:"#94A3B8" },
+    { code:"CSV",  label:"En comisión de servicio", desc:"Ocurrido cumpliendo una comisión de servicio", color:"#2DD4A7" },
+    { code:"DES",  label:"En desplazamiento", desc:"Ocurrido en desplazamiento por trabajo", color:"#35E0F0" },
+    { code:"OCT",  label:"En otro centro de trabajo", desc:"Ocurrido en otro centro de trabajo", color:"#4E7EF4" }
   ];
   function accTipo(code){ for(var i=0;i<ACC_TIPOS.length;i++) if(ACC_TIPOS[i].code===code) return ACC_TIPOS[i]; return ACC_TIPOS[ACC_TIPOS.length-1]; }
   function accRank(code){ for(var i=0;i<ACC_TIPOS.length;i++) if(ACC_TIPOS[i].code===code) return i; return 99; }
@@ -1594,6 +1624,173 @@
   }
 
   // ---- render ----
+  // ================= PDF del reporte de evento =================
+  // Generador propio, sin librerías: la app no puede cargar dependencias externas y tiene
+  // que seguir funcionando sin conexión. Helvetica con WinAnsiEncoding cubre los acentos
+  // del español, así que basta con codificar el texto a CP1252.
+  var HELV=(function(){
+    var w={};
+    function set(s,v){ for(var i=0;i<s.length;i++) w[s.charAt(i)]=v; }
+    set("ijl",222); set("'",191); set("|",260);
+    set(" !,./:;I[]\\ft",278); set("íìîï",278);
+    set("()-`r{}",333); set('"',355); set("*",389); set("^",469);
+    set("Jcksvxyz",500); set("+<=>~",584); set("FTZ",611);
+    set("&ABEKPSVXY",667); set("CDHNRUw",722); set("GOQ",778);
+    set("Mm",833); set("%",889); set("W",944); set("@",1015);
+    return w;
+  })();
+  function anchoTexto(s,size){
+    var t=0;
+    for(var i=0;i<s.length;i++){ var v=HELV[s.charAt(i)]; t += (v===undefined?556:v); }
+    return t*size/1000;
+  }
+  // Caracteres de CP1252 fuera de Latin-1 (comillas tipográficas, guiones largos, …)
+  var CP_EXTRA={"€":128,"‚":130,"ƒ":131,"„":132,"…":133,"†":134,
+    "‡":135,"ˆ":136,"‰":137,"Š":138,"‹":139,"Œ":140,"Ž":142,
+    "‘":145,"’":146,"“":147,"”":148,"•":149,"–":150,"—":151,
+    "˜":152,"™":153,"š":154,"›":155,"œ":156,"ž":158,"Ÿ":159};
+  function cp1252(s){
+    var out="";
+    for(var i=0;i<s.length;i++){
+      var ch=s.charAt(i);
+      if(s.charCodeAt(i)<256) out+=ch;
+      else if(CP_EXTRA[ch]!==undefined) out+=String.fromCharCode(CP_EXTRA[ch]);
+      else out+="?";
+    }
+    return out;
+  }
+  function pdfStr(s){
+    return "("+cp1252(String(s==null?"":s)).replace(/\\/g,"\\\\").replace(/\(/g,"\\(").replace(/\)/g,"\\)")+")";
+  }
+  function envolver(txt,size,maxW){
+    var out=[];
+    String(txt==null?"":txt).split(/\r?\n/).forEach(function(par){
+      var pal=par.split(/\s+/).filter(Boolean), linea="";
+      if(!pal.length){ out.push(""); return; }
+      pal.forEach(function(p){
+        while(anchoTexto(p,size)>maxW && p.length>1){        // palabra más ancha que la caja
+          var corte=p.length;
+          while(corte>1 && anchoTexto(p.slice(0,corte),size)>maxW) corte--;
+          if(linea){ out.push(linea); linea=""; }
+          out.push(p.slice(0,corte)); p=p.slice(corte);
+        }
+        var probar = linea ? linea+" "+p : p;
+        if(anchoTexto(probar,size)<=maxW) linea=probar;
+        else { if(linea) out.push(linea); linea=p; }
+      });
+      if(linea) out.push(linea);
+    });
+    return out.length?out:[""];
+  }
+  function construirPDF(paginas){
+    var objs=[], N=paginas.length, i;
+    var pg0=3, ct0=3+N, f1=3+2*N, f2=4+2*N;
+    var kids=[]; for(i=0;i<N;i++) kids.push((pg0+i)+" 0 R");
+    objs[1]="<< /Type /Catalog /Pages 2 0 R >>";
+    objs[2]="<< /Type /Pages /Kids ["+kids.join(" ")+"] /Count "+N+" >>";
+    for(i=0;i<N;i++){
+      objs[pg0+i]="<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources "+
+        "<< /Font << /F1 "+f1+" 0 R /F2 "+f2+" 0 R >> >> /Contents "+(ct0+i)+" 0 R >>";
+      objs[ct0+i]="<< /Length "+paginas[i].length+" >>\nstream\n"+paginas[i]+"\nendstream";
+    }
+    objs[f1]="<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>";
+    objs[f2]="<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>";
+
+    var total=objs.length, out="%PDF-1.4\n", offs=[];
+    for(i=1;i<total;i++){ offs[i]=out.length; out += i+" 0 obj\n"+objs[i]+"\nendobj\n"; }
+    var xref=out.length;
+    out += "xref\n0 "+total+"\n0000000000 65535 f \n";
+    for(i=1;i<total;i++) out += ("0000000000"+offs[i]).slice(-10)+" 00000 n \n";
+    out += "trailer\n<< /Size "+total+" /Root 1 0 R >>\nstartxref\n"+xref+"\n%%EOF\n";
+
+    var bytes=new Uint8Array(out.length);
+    for(i=0;i<out.length;i++) bytes[i]=out.charCodeAt(i)&0xFF;
+    return bytes;
+  }
+  function pdfReporteEvento(a){
+    var W=595.28, H=841.89, M=56, maxW=W-2*M;
+    var paginas=[], buf=[], y=H-M;
+    function cerrarPagina(){ paginas.push(buf.join("\n")); buf=[]; y=H-M; }
+    function sitio(alto){ if(y-alto < M+30) cerrarPagina(); }
+    function linea(t,size,bold,gris,sangria){
+      sitio(size*1.35);
+      y-=size;
+      buf.push("BT /"+(bold?"F2":"F1")+" "+size+" Tf "+(gris?"0.42 0.45 0.52":"0.07 0.09 0.13")+
+               " rg "+(M+(sangria||0)).toFixed(2)+" "+y.toFixed(2)+" Td "+pdfStr(t)+" Tj ET");
+      y-=size*0.35;
+    }
+    function parrafo(t,size,sangria){
+      envolver(t,size,maxW-(sangria||0)).forEach(function(l){ linea(l,size,false,false,sangria); });
+    }
+    function regla(){
+      sitio(14); y-=9;
+      buf.push("q 0.8 w 0.78 0.81 0.86 RG "+M.toFixed(2)+" "+y.toFixed(2)+" m "+(W-M).toFixed(2)+" "+y.toFixed(2)+" l S Q");
+      y-=9;
+    }
+    function hueco(n){ sitio(n); y-=n; }
+    function campo(n,titulo,valor){
+      sitio(46); hueco(6);
+      linea(n+". "+titulo.toUpperCase(),9,true,true);
+      parrafo(valor && String(valor).trim() ? valor : "—", 11.5, 0);
+    }
+
+    var t=accTipo(a.tipo), info=accConPlazo(a), rep=(a.estado==="Reportado");
+
+    linea("REPORTE DE EVENTO",19,true);
+    linea("Coordinación de Seguridad y Salud en el Trabajo",9.5,false,true);
+    regla();
+
+    var fh=fmtLargo(a.fecha)+(a.hora?"   ·   "+a.hora+" h":"");
+    campo(1,"Fecha y hora",fh);
+    campo(2,"Localidad y área de trabajo",[a.sede,a.area].filter(Boolean).join("   ·   "));
+    campo(3,"Nombres y apellidos",a.nombre);
+    campo(4,"Puesto de trabajo",a.puesto);
+    campo(5,"Descripción",a.desc);
+    campo(6,"Clasificación del evento",t.label+"  —  "+t.desc);
+
+    hueco(10); regla();
+    linea("FECHA MÁXIMA DE REPORTE",9,true,true);
+    linea(info.limite?fmtLargo(info.limite):"—",14,true);
+    parrafo("10 días laborables contando el día del evento, sin sábados, domingos ni feriados nacionales.",9,0);
+    if(info.feriados && info.feriados.length){
+      parrafo("Feriados descontados: "+info.feriados.map(function(x){ return x.nom+" ("+fmtLargo(x.iso)+")"; }).join(", ")+".",9,0);
+    }
+    hueco(8);
+    linea("ESTADO DEL REPORTE",9,true,true);
+    linea(rep ? ("REPORTADO"+(a.fechaReporte?"  —  "+fmtLargo(a.fechaReporte):"")) : "NO REPORTADO",12.5,true);
+
+    hueco(16); regla();
+    linea("Generado el "+fmtLargo(todayISO())+" desde el Planificador SST.",8.5,false,true);
+
+    cerrarPagina();
+    return construirPDF(paginas);
+  }
+  function compartirPDFEvento(id){
+    var a=null;
+    for(var i=0;i<state.accidentes.length;i++) if(state.accidentes[i].id===id) a=state.accidentes[i];
+    if(!a) return;
+    var bytes;
+    try{ bytes=pdfReporteEvento(a); }
+    catch(e){ alert("No se pudo generar el PDF: "+(e&&e.message||e)); return; }
+    var arch=("Reporte de evento - "+(a.nombre||"sin nombre")+" - "+(a.fecha||"")+".pdf")
+             .replace(/[\/\\:*?"<>|]/g,"-");
+    var blob=new Blob([bytes],{type:"application/pdf"});
+    // En el celular, compartir abre la hoja del sistema con el PDF adjunto: desde ahí va
+    // directo a WhatsApp. En escritorio no existe, así que se descarga.
+    if(window.File && navigator.share && navigator.canShare){
+      try{
+        var f=new File([blob],arch,{type:"application/pdf"});
+        if(navigator.canShare({files:[f]})){
+          navigator.share({ files:[f], title:"Reporte de evento" }).catch(function(err){
+            if(err && err.name!=="AbortError") download(arch,blob,"application/pdf","PDF generado");
+          });
+          return;
+        }
+      }catch(e){}
+    }
+    download(arch,blob,"application/pdf","PDF generado");
+  }
+
   function accCardHTML(a){
     var t=accTipo(a.tipo), info=accConPlazo(a), rep=(a.estado==="Reportado");
     var cls="", cd="", cdCls="", vCls="due";
@@ -1602,21 +1799,25 @@
     else if(info.restantes<0){ cls="vencido"; cd="PLAZO VENCIDO"; cdCls="crit"; vCls="crit"; }
     else if(info.restantes<=3){ cls="urgente"; cd=info.restantes+" DÍA"+(info.restantes===1?"":"S")+" HÁBIL"+(info.restantes===1?"":"ES"); cdCls="warn"; vCls="warn"; }
     else { cd=info.restantes+" DÍAS HÁBILES"; }
-    var btn = rep
-      ? '<button class="acc-btn undo" data-accundo="'+a.id+'">Reabrir</button>'
-      : '<button class="acc-btn" data-accrep="'+a.id+'">'+CHECK+'Marcar reportado</button>';
-    var meta=[a.area, a.sede].filter(Boolean).join(" · ");
+    var btn =
+      '<span class="rep-tg">'+
+        '<button class="rt'+(rep?"":" on")+'" data-accestado="'+a.id+'" data-val="0">No reportado</button>'+
+        '<button class="rt'+(rep?" on":"")+'" data-accestado="'+a.id+'" data-val="1">Reportado</button>'+
+      '</span>';
+    var pdf='<button class="acc-btn pdf" data-accpdf="'+a.id+'" title="Genera el PDF del reporte para compartir">'+
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="M9 15l3-3 3 3"/></svg>PDF</button>';
+    var meta=[a.puesto, a.area, a.sede].filter(Boolean).join(" · ");
     return '<div class="acc-card '+cls+'" data-accid="'+a.id+'" style="--sev:'+t.color+'">'+
       '<div class="acc-top"><span class="sev-tag" style="color:'+t.color+';border-color:'+t.color+'66;background:'+t.color+'1a">'+esc(t.label.toUpperCase())+'</span>'+
         (a.sede?'<span class="sede-tag">'+esc(a.sede)+'</span>':'')+'</div>'+
       '<div class="acc-name">'+esc(a.nombre)+'</div>'+
       (meta?'<div class="acc-meta">'+esc(meta)+'</div>':'')+
       '<div class="acc-dates">'+
-        '<div class="acc-d"><div class="l">Fecha del accidente</div><div class="v">'+fmtD(a.fecha)+'</div></div>'+
+        '<div class="acc-d"><div class="l">Fecha del evento</div><div class="v">'+fmtD(a.fecha)+(a.hora?' · '+esc(a.hora):'')+'</div></div>'+
         '<div class="acc-d"><div class="l">Máximo para reportar</div><div class="v '+vCls+'">'+(info.limite?fmtD(info.limite):"—")+'</div></div>'+
         (rep&&a.fechaReporte?'<div class="acc-d"><div class="l">Reportado el</div><div class="v">'+fmtD(a.fechaReporte)+'</div></div>':'')+
       '</div>'+
-      '<div class="acc-foot"><span class="cdown '+cdCls+'">'+cd+'</span>'+btn+'</div>'+
+      '<div class="acc-foot"><span class="cdown '+cdCls+'">'+cd+'</span><span class="acc-acts">'+pdf+btn+'</span></div>'+
     '</div>';
   }
   function renderAccidentes(){
@@ -1624,14 +1825,14 @@
     el("accCount").textContent="("+rows.length+")";
     el("accCards").innerHTML = rows.length
       ? rows.map(accCardHTML).join("")
-      : '<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg><h3>Sin accidentes registrados</h3><div>Usa «Registrar accidente» para añadir el primero.</div></div>';
+      : '<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg><h3>Sin eventos registrados</h3><div>Usa «Registrar evento» para añadir el primero.</div></div>';
 
     var pend=state.accidentes.filter(function(a){ return a.estado!=="Reportado"; });
     var venc=pend.filter(function(a){ var r=accConPlazo(a).restantes; return r!==null && r<0; }).length;
     var urg =pend.filter(function(a){ var r=accConPlazo(a).restantes; return r!==null && r>=0 && r<=3; }).length;
     var rep =state.accidentes.filter(function(a){ return a.estado==="Reportado"; }).length;
     el("accKpis").innerHTML=
-      '<div class="kpi accent"><div class="kl">Accidentes</div><div class="kv tabnum">'+state.accidentes.length+'</div><div class="kfoot"><span style="color:var(--muted);font-size:12px">registrados</span></div></div>'+
+      '<div class="kpi accent"><div class="kl">Eventos</div><div class="kv tabnum">'+state.accidentes.length+'</div><div class="kfoot"><span style="color:var(--muted);font-size:12px">registrados</span></div></div>'+
       '<div class="kpi proc"><div class="kl">Por vencer ≤3 días</div><div class="kv tabnum">'+urg+'</div><div class="kfoot"><span style="color:var(--muted);font-size:12px">requieren aviso</span></div></div>'+
       '<div class="kpi late"><div class="kl">Plazo vencido</div><div class="kv tabnum">'+venc+'</div><div class="kfoot"><span style="color:var(--muted);font-size:12px">'+(venc?"fuera de plazo":"ninguno")+'</span></div></div>'+
       '<div class="kpi done"><div class="kl">Reportados</div><div class="kv tabnum">'+rep+'</div><div class="kfoot"><span class="livedot"></span><span style="color:var(--muted);font-size:12px">al IESS</span></div></div>';
@@ -1669,12 +1870,14 @@
   }
   function openAcc(a){
     editingAcc=a?a.id:null;
-    el("asheetTitle").textContent=a?"Editar accidente":"Registrar accidente";
+    el("asheetTitle").textContent=a?"Editar reporte de evento":"Reporte de evento";
     el("a_nombre").value=a?a.nombre:"";
     el("a_fecha").value=a?a.fecha:todayISO();
+    el("a_hora").value=a?(a.hora||""):"";
     el("a_tipo").value=a?a.tipo:ACC_TIPOS[0].code;
     el("a_sede").value=a?(a.sede||"Matriz"):"Matriz";
     el("a_area").value=a?(a.area||""):"";
+    el("a_puesto").value=a?(a.puesto||""):"";
     el("a_desc").value=a?(a.desc||""):"";
     el("a_estado").value=a?(a.estado||"Pendiente"):"Pendiente";
     el("a_freporte").value=a?(a.fechaReporte||""):"";
@@ -1693,34 +1896,36 @@
     if(!fecha){ el("aw_fecha").classList.add("invalid"); ok=false; }
     if(!ok){ (nombre?el("a_fecha"):el("a_nombre")).focus(); return; }
     var estado=el("a_estado").value;
-    var data={ nombre:nombre, fecha:fecha, tipo:el("a_tipo").value, sede:el("a_sede").value,
-      area:el("a_area").value.trim(), desc:el("a_desc").value.trim(), estado:estado,
+    var data={ nombre:nombre, fecha:fecha, hora:el("a_hora").value, tipo:el("a_tipo").value,
+      sede:el("a_sede").value, area:el("a_area").value.trim(), puesto:el("a_puesto").value.trim(),
+      desc:el("a_desc").value.trim(), estado:estado,
       fechaReporte: estado==="Reportado" ? (el("a_freporte").value||todayISO()) : "" };
-    if(editingAcc){ for(var i=0;i<state.accidentes.length;i++){ if(state.accidentes[i].id===editingAcc){ data.id=editingAcc; state.accidentes[i]=data; break; } } toast("Accidente actualizado"); }
-    else { data.id=uid(); state.accidentes.push(data); toast("Accidente registrado"); }
+    if(editingAcc){ for(var i=0;i<state.accidentes.length;i++){ if(state.accidentes[i].id===editingAcc){ data.id=editingAcc; state.accidentes[i]=data; break; } } toast("Reporte actualizado"); }
+    else { data.id=uid(); state.accidentes.push(data); toast("Reporte de evento creado"); }
     saveAcc(); renderAccidentes(); closeAcc();
   }
   function delAcc(){
     if(!editingAcc) return;
-    if(!confirm("¿Eliminar este registro de accidente? No se puede deshacer.")) return;
+    if(!confirm("¿Eliminar este reporte de evento? No se puede deshacer.")) return;
     state.accidentes=state.accidentes.filter(function(a){ return a.id!==editingAcc; });
     saveAcc(); renderAccidentes(); closeAcc(); toast("Registro eliminado");
   }
   function marcarReportado(id,rep){
     for(var i=0;i<state.accidentes.length;i++){ if(state.accidentes[i].id===id){
+      if((state.accidentes[i].estado==="Reportado")===rep) return;   // ya estaba en ese estado
       state.accidentes[i].estado = rep?"Reportado":"Pendiente";
       state.accidentes[i].fechaReporte = rep?todayISO():"";
       break; } }
-    saveAcc(); renderAccidentes(); toast(rep?"Marcado como reportado ✓":"Reporte reabierto");
+    saveAcc(); renderAccidentes(); toast(rep?"Marcado como reportado ✓":"Marcado como no reportado");
   }
   function exportAccCSV(){
-    if(!state.accidentes.length){ alert("Aún no hay accidentes registrados."); return; }
-    var head=["Nombre del accidentado","Clasificación","Sede","Área","Fecha del accidente","Fecha máxima de reporte","Días hábiles restantes","Estado","Fecha de reporte","Descripción"];
+    if(!state.accidentes.length){ alert("Aún no hay eventos registrados."); return; }
+    var head=["Nombres y apellidos","Puesto de trabajo","Clasificación","Localidad","Área","Fecha del evento","Hora","Fecha máxima de reporte","Días hábiles restantes","Estado","Fecha de reporte","Descripción"];
     var q=function(v){ v=String(v==null?"":v); return '"'+v.replace(/"/g,'""')+'"'; };
     var lines=[head.map(q).join(",")];
     accFiltrados().forEach(function(a){
       var info=accConPlazo(a);
-      lines.push([a.nombre,accTipo(a.tipo).label,a.sede,a.area,a.fecha,info.limite,
+      lines.push([a.nombre,a.puesto,accTipo(a.tipo).label,a.sede,a.area,a.fecha,a.hora,info.limite,
         (a.estado==="Reportado"?"":(info.restantes===null?"":info.restantes)),a.estado||"Pendiente",a.fechaReporte,a.desc].map(q).join(","));
     });
     download("accidentes-"+stamp()+".csv","﻿"+lines.join("\r\n"),"text/csv;charset=utf-8","CSV de accidentes exportado");
@@ -2137,8 +2342,9 @@
     el("importFile").addEventListener("change",function(e){ if(e.target.files[0]) importFile(e.target.files[0]); e.target.value=""; });
 
     document.addEventListener("click",function(e){
-      var ar=e.target.closest("[data-accrep]"); if(ar){ marcarReportado(ar.getAttribute("data-accrep"),true); return; }
-      var au=e.target.closest("[data-accundo]"); if(au){ marcarReportado(au.getAttribute("data-accundo"),false); return; }
+      var ap=e.target.closest("[data-accpdf]"); if(ap){ compartirPDFEvento(ap.getAttribute("data-accpdf")); return; }
+      var ae=e.target.closest("[data-accestado]");
+      if(ae){ marcarReportado(ae.getAttribute("data-accestado"), ae.getAttribute("data-val")==="1"); return; }
       var ac=e.target.closest("[data-accid]");
       if(ac){ var acc=state.accidentes.filter(function(x){return x.id===ac.getAttribute("data-accid");})[0]; if(acc) openAcc(acc); return; }
       var cb=e.target.closest("[data-complete]"); if(cb){ completeItem(cb.getAttribute("data-complete")); return; }
