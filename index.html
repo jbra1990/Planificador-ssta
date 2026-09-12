@@ -11,13 +11,18 @@
 <style>
   :root {
     color-scheme: dark;
-    --bg: #1F2E4A;
-    --bg-2: #27395E;
-    --card: #2C3E62;
-    --card-2: #36507E;
-    --card-solid: #2C3E62;
-    --border: rgba(255,255,255,.10);
-    --border-2: rgba(255,255,255,.18);
+    --bg: #16223C;
+    --bg-2: rgba(38,56,94,.55);
+    /* Superficies traslúcidas (vidrio esmerilado) */
+    --card: rgba(255,255,255,.075);
+    --card-2: rgba(255,255,255,.13);
+    --card-solid: #23335A;
+    --border: rgba(255,255,255,.14);
+    --border-2: rgba(255,255,255,.24);
+    --blur: blur(18px) saturate(150%);
+    --blur-lg: blur(26px) saturate(160%);
+    --sheen: inset 0 1px 0 rgba(255,255,255,.14);
+    --lift: 0 8px 28px rgba(6,12,28,.28);
     --ink: #EAF0FA;
     --ink-2: #B7C1D6;
     --muted: #7C899F;
@@ -50,14 +55,34 @@
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
   body {
-    background:
-      radial-gradient(1100px 620px at 82% -8%, rgba(53,224,240,.10), transparent 60%),
-      radial-gradient(1000px 560px at 8% 4%, rgba(78,126,244,.12), transparent 55%),
-      var(--bg);
-    background-attachment: fixed;
+    background: var(--bg);
     color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.45;
     -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
   }
+  /* Telón de fondo fijo: da profundidad y es lo que el vidrio difumina.
+     Se usa una capa propia en vez de background-attachment:fixed, que iOS Safari ignora. */
+  body::before {
+    content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background:
+      radial-gradient(760px 560px at 84% -6%, rgba(53,224,240,.20), transparent 62%),
+      radial-gradient(820px 620px at 6% 2%, rgba(78,126,244,.24), transparent 60%),
+      radial-gradient(700px 520px at 78% 92%, rgba(144,133,233,.18), transparent 62%),
+      radial-gradient(620px 480px at 18% 88%, rgba(53,224,240,.10), transparent 62%),
+      var(--bg);
+  }
+  /* Vidrio esmerilado en todas las superficies. -webkit- es necesario para Safari/iOS. */
+  .kpi, .panel, .mini, .set-group, .chip, .search, .pcol, .col, .pcard, .kcard,
+  .acard, .acc-card, .deadline-box, .topbar, .sidebar, .sheet, .toast, .bell,
+  .sync-pill, .sb-user, .set-row .si, .alert {
+    backdrop-filter: var(--blur);
+    -webkit-backdrop-filter: var(--blur);
+  }
+  .kpi, .panel, .mini, .set-group, .pcard, .acard, .acc-card, .pcol, .col, .kcard { box-shadow: var(--sheen), var(--lift); }
+  /* Si el navegador no soporta el desenfoque, se opacan un poco para no perder legibilidad */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    :root { --card: rgba(40,58,96,.92); --card-2: rgba(56,78,124,.92); --bg-2: rgba(34,50,86,.96); }
+  }
+
   h1,h2,h3 { margin: 0; text-wrap: balance; }
   button { font-family: inherit; cursor: pointer; color: inherit; }
   input, select, textarea { font-family: inherit; font-size: 14px; }
@@ -67,7 +92,7 @@
   :focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; border-radius: 6px; }
   .tabnum { font-variant-numeric: tabular-nums; }
 
-  .app { width: 100%; min-height: 100vh; padding-bottom: calc(var(--navh) + 8px); position: relative; }
+  .app { width: 100%; min-height: 100vh; padding-bottom: calc(30px + env(safe-area-inset-bottom)); position: relative; }
 
   /* ---------- Top bar ---------- */
   .topbar {
@@ -103,7 +128,9 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   @media (prefers-reduced-motion: reduce) { .sync-pill.busy svg { animation: none; } }
   .sync-pill.err { color: var(--st-late); border-color: rgba(251,110,133,.4); }
-  @media (max-width: 700px) { .sync-pill .sp-t { display: none; } .sync-pill { padding: 8px; } }
+  /* En el celular el estado de sincronización vive en el panel lateral, para dejar
+     la barra superior despejada entre el botón de menú y la campana. */
+  @media (max-width: 899px) { .sync-pill { display: none !important; } }
   .bell { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--border); background: var(--card); display: grid; place-items: center; }
   .bell svg { width: 20px; height: 20px; color: var(--ink-2); }
   .bell .badge {
@@ -186,10 +213,10 @@
   .pcol-n { font-family: var(--mono); font-size: 12.5px; color: var(--cc); font-weight: 800; }
   .pcol-b { padding: 12px; display: flex; flex-direction: column; gap: 11px; }
   .pcard { position: relative; background: var(--card); border: 1px solid var(--border); border-left: 4px solid var(--cyan); border-radius: 12px; padding: 13px 13px 12px; cursor: pointer; transition: border-color .12s, transform .05s; }
-  /* color por criticidad (mate/opaco) */
-  .pcard.crit-alta  { border-left-color: var(--pri-alta); border-color: rgba(251,110,133,.42); background: #5b3f56; background: color-mix(in srgb, var(--pri-alta) 26%, var(--card)); }
-  .pcard.crit-media { border-left-color: var(--st-proc); border-color: rgba(251,191,36,.40); background: #5a5741; background: color-mix(in srgb, var(--st-proc) 24%, var(--card)); }
-  .pcard.crit-baja  { border-left-color: var(--st-wait); border-color: rgba(148,163,184,.34); background: #3c4a6a; background: color-mix(in srgb, var(--st-wait) 18%, var(--card)); }
+  /* color por criticidad: vidrio teñido */
+  .pcard.crit-alta  { border-left-color: var(--pri-alta); border-color: rgba(251,110,133,.42); background: linear-gradient(160deg, rgba(251,110,133,.26), rgba(251,110,133,.10)); }
+  .pcard.crit-media { border-left-color: var(--st-proc); border-color: rgba(251,191,36,.40); background: linear-gradient(160deg, rgba(251,191,36,.24), rgba(251,191,36,.09)); }
+  .pcard.crit-baja  { border-left-color: var(--st-wait); border-color: rgba(148,163,184,.34); background: linear-gradient(160deg, rgba(148,163,184,.20), rgba(148,163,184,.07)); }
   .pcard.crit-alta:hover  { border-color: rgba(251,110,133,.7); }
   .pcard.crit-media:hover { border-color: rgba(251,191,36,.65); }
   .pcard.crit-baja:hover  { border-color: rgba(148,163,184,.6); }
@@ -334,7 +361,7 @@
 
   /* ---------- FAB ---------- */
   .fab {
-    position: fixed; z-index: 30; right: 18px; bottom: calc(var(--navh) + 16px);
+    position: fixed; z-index: 30; right: 18px; bottom: calc(22px + env(safe-area-inset-bottom));
     width: 60px; height: 60px; border-radius: 20px; border: none; background: var(--grad); color: #05121b;
     display: grid; place-items: center; box-shadow: var(--glow), 0 10px 30px rgba(53,224,240,.3);
   }
@@ -346,8 +373,8 @@
   .acc-card { position: relative; background: var(--card); border: 1px solid var(--border); border-left: 4px solid var(--sev, var(--muted)); border-radius: var(--r); padding: 15px 16px 14px; cursor: pointer; transition: border-color .12s, transform .05s; }
   .acc-card:hover { border-color: var(--border-2); }
   .acc-card:active { transform: scale(.994); }
-  .acc-card.urgente { background: color-mix(in srgb, var(--st-proc) 16%, var(--card)); border-color: rgba(251,191,36,.42); }
-  .acc-card.vencido { background: color-mix(in srgb, var(--pri-alta) 20%, var(--card)); border-color: rgba(251,110,133,.5); }
+  .acc-card.urgente { background: linear-gradient(160deg, rgba(251,191,36,.22), rgba(251,191,36,.08)); border-color: rgba(251,191,36,.42); }
+  .acc-card.vencido { background: linear-gradient(160deg, rgba(251,110,133,.24), rgba(251,110,133,.09)); border-color: rgba(251,110,133,.5); }
   .acc-card.reportado { opacity: .72; }
   .acc-top { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-bottom: 11px; }
   .sev-tag { font-family: var(--mono); font-size: 10.5px; font-weight: 800; letter-spacing: .07em; padding: 4px 9px; border-radius: 6px; border: 1px solid; white-space: nowrap; }
@@ -382,15 +409,31 @@
   .navbtn { position: relative; }
   .navbtn .nav-badge { position: absolute; top: 2px; right: 50%; margin-right: -20px; }
 
-  /* ---------- Sidebar (escritorio) ---------- */
-  .sidebar { display: none; }
+  /* ---------- Menú lateral: el mismo en laptop y celular ----------
+     En pantallas anchas queda fijo; en el celular se desliza desde la izquierda. */
+  .sidebar {
+    display: flex; flex-direction: column; position: fixed; left: 0; top: 0; bottom: 0; width: 272px; z-index: 45;
+    padding: calc(22px + env(safe-area-inset-top)) 16px 18px;
+    background: linear-gradient(180deg, rgba(46,66,108,.72), rgba(26,40,72,.72));
+    border-right: 1px solid var(--border);
+    transform: translateX(-100%); transition: transform .28s cubic-bezier(.4,0,.2,1);
+    overflow-y: auto;
+  }
+  .sidebar.open { transform: translateX(0); }
+  @media (prefers-reduced-motion: reduce) { .sidebar { transition: none; } }
+  .navscrim {
+    position: fixed; inset: 0; z-index: 44; background: rgba(6,12,26,.55);
+    opacity: 0; pointer-events: none; transition: opacity .25s;
+  }
+  .navscrim.open { opacity: 1; pointer-events: auto; }
+  .sb-close { display: grid; place-items: center; width: 38px; height: 38px; margin-left: auto; border-radius: 50%; border: 1px solid var(--border); background: var(--card); flex: 0 0 auto; }
+  .sb-close svg { width: 17px; height: 17px; color: var(--ink-2); }
+  .hamb { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 42px; height: 42px; border-radius: 13px; border: 1px solid var(--border); background: var(--card); display: grid; place-items: center; }
+  .hamb svg { width: 20px; height: 20px; color: var(--ink-2); }
   @media (min-width: 900px) {
-    .sidebar {
-      display: flex; flex-direction: column; position: fixed; left: 0; top: 0; bottom: 0; width: 248px; z-index: 26;
-      padding: 22px 16px 18px; background: linear-gradient(180deg, var(--bg-2), var(--bg) 60%); border-right: 1px solid var(--border);
-    }
+    .sidebar { transform: none; width: 248px; z-index: 26; }
+    .navscrim, .hamb, .sb-close { display: none !important; }
     .app { padding-left: 248px; padding-bottom: 28px; }
-    .bottomnav { display: none; }
     .fab { bottom: 24px; }
   }
   .sb-brand { display: flex; align-items: center; gap: 12px; padding: 4px 8px 20px; }
@@ -416,7 +459,8 @@
   .sb-urole { font-size: 10.5px; color: var(--muted); margin-top: 1px; }
 
   /* ---------- Bottom nav ---------- */
-  .bottomnav {
+  .bottomnav { display: none; }
+  .bottomnav-unused {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; height: var(--navh);
     display: flex; justify-content: center; gap: 4px; padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
     background: var(--bg-2);
@@ -435,7 +479,8 @@
   .overlay.open { opacity: 1; pointer-events: auto; }
   .sheet {
     position: fixed; left: 50%; transform: translate(-50%, 100%); bottom: 0; width: min(560px, 100%);
-    max-height: 94vh; background: var(--card-solid); border: 1px solid var(--border-2); border-bottom: none;
+    max-height: 94vh; background: rgba(30,45,80,.80); border: 1px solid var(--border-2); border-bottom: none;
+    backdrop-filter: var(--blur-lg); -webkit-backdrop-filter: var(--blur-lg);
     border-radius: 24px 24px 0 0; box-shadow: 0 -20px 60px rgba(0,0,0,.5); z-index: 50;
     display: flex; flex-direction: column; transition: transform .26s cubic-bezier(.4,0,.2,1);
   }
@@ -486,15 +531,16 @@
   .btn.block { flex: 1; }
   .btn.del { color: var(--st-late); border-color: rgba(251,110,133,.35); background: rgba(251,110,133,.08); }
 
-  .toast { position: fixed; left: 50%; bottom: calc(var(--navh) + 22px); transform: translate(-50%, 14px); background: #0e1626; border: 1px solid var(--border-2); color: var(--ink); padding: 11px 18px; border-radius: 999px; font-size: 13.5px; font-weight: 650; box-shadow: 0 12px 30px rgba(0,0,0,.4); opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 60; }
+  .toast { position: fixed; left: 50%; bottom: calc(28px + env(safe-area-inset-bottom)); transform: translate(-50%, 14px); background: #0e1626; border: 1px solid var(--border-2); color: var(--ink); padding: 11px 18px; border-radius: 999px; font-size: 13.5px; font-weight: 650; box-shadow: 0 12px 30px rgba(0,0,0,.4); opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 60; }
   .toast.show { opacity: 1; transform: translate(-50%, 0); }
 </style>
 
 <div class="app">
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <div class="sb-brand">
       <div class="sb-logo"></div>
       <div><div class="sb-name">PLANIFICADOR</div><div class="sb-sub">SST · CORE_v1</div></div>
+      <button class="sb-close" id="sbClose" aria-label="Cerrar menú"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
     <nav class="sb-nav">
       <button class="snav active" data-tab="planner">
@@ -511,7 +557,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-2.9 1.09V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 6.6 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 2 15.4a1.65 1.65 0 0 0-1-1.51H1a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 2.6 8.6a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 8 3.6h.09A1.65 1.65 0 0 0 10 2a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 2.9 1.09l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 21.4 8.6v0a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Ajustes</span></button>
     </nav>
     <div class="sb-foot">
-      <div class="sb-status"><span class="sb-dot"></span> SISTEMA LOCAL · ACTIVO</div>
+      <div class="sb-status"><span class="sb-dot" id="sbDot"></span> <span id="sbStatusTx">SISTEMA LOCAL · ACTIVO</span></div>
       <div class="sb-user">
         <div class="sb-ava">🦺</div>
         <div><div class="sb-uname">OPERADOR SST</div><div class="sb-urole">Coordinación de Seguridad</div></div>
@@ -519,7 +565,12 @@
     </div>
   </aside>
 
+  <div class="navscrim" id="navScrim"></div>
+
   <header class="topbar">
+    <button class="hamb" id="hamb" aria-label="Abrir menú" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
     <div class="tt">PLANIFICADOR</div>
     <button class="sync-pill off" id="syncPill" hidden title="Estado de la sincronización">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12a9 9 0 0 1-9 9 9 9 0 0 1-7.5-4M3 12a9 9 0 0 1 9-9 9 9 0 0 1 7.5 4"/><path d="M3 17v-4h4M21 7v4h-4"/></svg>
@@ -1808,6 +1859,19 @@
   }
 
   // ---- interfaz ----
+  // ---------- menú lateral (deslizable en el celular) ----------
+  function navIsDrawer(){ return window.matchMedia("(max-width: 899px)").matches; }
+  function openNav(){
+    if(!navIsDrawer()) return;
+    el("sidebar").classList.add("open"); el("navScrim").classList.add("open");
+    el("hamb").setAttribute("aria-expanded","true");
+  }
+  function closeNav(){
+    el("sidebar").classList.remove("open"); el("navScrim").classList.remove("open");
+    el("hamb").setAttribute("aria-expanded","false");
+  }
+  function toggleNav(){ el("sidebar").classList.contains("open") ? closeNav() : openNav(); }
+
   function renderSyncUI(){
     var pill=el("syncPill"), sub=el("setSyncSub");
     var txt, cls;
@@ -1823,6 +1887,11 @@
       pill.querySelector(".sp-t").textContent=txt;
     }
     var d=el("syncActions"); if(d) d.style.display = syncOn() ? "" : "none";
+    // Estado también en el panel lateral (única vía visible en el celular)
+    var sTx=el("sbStatusTx"), sDot=el("sbDot");
+    if(sTx) sTx.textContent = syncOn() ? ("SINCRONIZADO · "+txt.toUpperCase()) : "SOLO EN ESTE DISPOSITIVO";
+    if(sDot) sDot.style.background = sDot.style.boxShadow = "",
+             sDot.style.background = (cls==="err" ? "var(--st-late)" : cls==="busy" ? "var(--cyan)" : cls==="ok" ? "var(--st-plan)" : "var(--muted)");
   }
   function openSyncSheet(){
     var c=sync.cfg||{};
@@ -1904,7 +1973,13 @@
     [el("agrab"), sh.querySelector(".sheet-h")].forEach(function(h){ if(!h) return; h.addEventListener("touchstart",s,{passive:true}); h.addEventListener("touchmove",m,{passive:true}); h.addEventListener("touchend",e_); });
   }
   function bind(){
-    Array.prototype.forEach.call(document.querySelectorAll(".navbtn, .snav"),function(b){ b.addEventListener("click",function(){ setTab(b.getAttribute("data-tab")); }); });
+    Array.prototype.forEach.call(document.querySelectorAll(".navbtn, .snav"),function(b){
+      b.addEventListener("click",function(){ setTab(b.getAttribute("data-tab")); closeNav(); });
+    });
+    el("hamb").addEventListener("click",toggleNav);
+    el("sbClose").addEventListener("click",closeNav);
+    el("navScrim").addEventListener("click",closeNav);
+    window.addEventListener("resize",function(){ if(!navIsDrawer()) closeNav(); });
     el("fab").addEventListener("click",function(){ openSheet(null); });
     el("closeSheet").addEventListener("click",closeSheet);
     el("overlay").addEventListener("click",function(){ closeSheet(); closeAcc(); closeSyncSheet(); });
@@ -1985,7 +2060,7 @@
         setTab("planner"); renderCards(); renderKanban();
       }
     });
-    document.addEventListener("keydown",function(e){ if(e.key==="Escape"){ closeSheet(); closeAcc(); closeSyncSheet(); } });
+    document.addEventListener("keydown",function(e){ if(e.key==="Escape"){ closeSheet(); closeAcc(); closeSyncSheet(); closeNav(); } });
 
     window.addEventListener("storage",function(e){
       if(e.key===STORE_KEY){
