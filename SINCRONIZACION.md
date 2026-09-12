@@ -36,18 +36,28 @@ Debe responder *Success*.
 
 ## 3. Copiar las dos claves
 
-En **Project Settings → API** copia:
+En **Project Settings → API Keys**, pestaña *Publishable and secret API keys*, copia la
+**Publishable key** — empieza con `sb_publishable_`.
 
-- **Project URL** — algo como `https://abcdefgh.supabase.co`
-- **anon public** — una cadena larga que empieza con `eyJ...`
+> En proyectos creados antes del cambio de formato, la equivalente está en la pestaña
+> *Legacy anon, service_role API keys* y se llama **anon public**: una cadena larga que
+> empieza con `eyJ...`. La app acepta cualquiera de las dos.
+
+La **URL del proyecto** está en **Project Settings → Data API → Project URL**, y tiene la
+forma `https://abcdefgh.supabase.co`. También se puede armar con el identificador que
+aparece en la barra de direcciones del panel, después de `/project/`.
 
 Ambas son públicas por diseño: sirven para conectarse, no para leer tus datos (que van
 cifrados).
 
+⚠️ En esa misma pantalla hay una **Secret key** (antes `service_role`). Esa no se usa en la
+app y no debe compartirse con nadie: da acceso completo a la base saltándose las reglas de
+seguridad. La app rechaza esa clave si se pega por error.
+
 ## 4. Activar en la computadora
 
 1. Abre la app → **Ajustes → Configurar sincronización 🔒**
-2. Pega la **URL del proyecto** y la **clave pública (anon key)**.
+2. Pega la **URL del proyecto** y la **clave pública** (`sb_publishable_…`).
 3. Escribe una **contraseña de cifrado** (mínimo 8 caracteres). Es tuya, no se sube a
    ningún lado, y es la que protege la información.
 4. **Activar sincronización**. Arriba aparecerá el indicador **Al día**.
@@ -100,5 +110,5 @@ dispositivos.
 |---|---|
 | *Error: contraseña incorrecta* | La contraseña de cifrado no coincide con la del otro dispositivo. |
 | *Sin acceso a la nube* | No hay internet, la URL está mal escrita o el proyecto está pausado. |
-| *Error: HTTP 401* | La clave pública (anon key) es incorrecta. |
+| *Error: HTTP 401* | La clave pública está mal copiada. |
 | *Error: HTTP 404* | Falta crear la tabla del paso 2. |

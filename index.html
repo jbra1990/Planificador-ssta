@@ -879,8 +879,9 @@
       <input type="url" id="sy_url" placeholder="https://xxxxxxxx.supabase.co" autocomplete="off" />
     </div>
     <div class="field">
-      <label for="sy_key">Clave pública (anon key)</label>
-      <input type="text" id="sy_key" placeholder="eyJhbGciOi…" autocomplete="off" />
+      <label for="sy_key">Clave pública (publishable / anon key)</label>
+      <input type="text" id="sy_key" placeholder="sb_publishable_… o eyJhbGciOi…" autocomplete="off" />
+      <div class="hint">En Supabase: <strong>Publishable key</strong>. No la clave <em>secret</em> ni <em>service_role</em>.</div>
     </div>
     <div class="field">
       <label for="sy_pass">Contraseña de cifrado <span class="req">*</span></label>
@@ -1933,7 +1934,10 @@
     if(!/^https:\/\/.+/.test(url) && !/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?/.test(url)){
       alert("La URL del proyecto debe empezar con https://"); return;
     }
-    if(!key){ alert("Falta la clave pública (anon key)."); return; }
+    if(!key){ alert("Falta la clave pública (publishable key)."); return; }
+    if(/^sb_secret_/.test(key) || /^service_role/.test(key)){
+      alert("Esa es la clave SECRETA del proyecto y no debe usarse aquí ni compartirse.\n\nCopia la «Publishable key», que empieza con sb_publishable_"); return;
+    }
     if(!pass || pass.length<8){ alert("La contraseña de cifrado debe tener al menos 8 caracteres.\n\n⚠️ Debe ser la MISMA en todos tus dispositivos y no se puede recuperar si la olvidas."); return; }
     var prev=sync.cfg||{};
     sync.cfg={ url:url, key:key, pass:pass,
