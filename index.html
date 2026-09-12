@@ -871,8 +871,8 @@
     <p class="hint" style="margin:0 0 16px">Tus datos se cifran en este dispositivo con tu contraseña <strong>antes</strong> de subir. El servidor solo guarda texto cifrado que no puede leer.</p>
     <div class="field">
       <label for="sy_code">¿Ya configuraste otro dispositivo?</label>
-      <input type="text" id="sy_code" placeholder="Pega aquí el código de vinculación" />
-      <div class="hint">Al pegarlo se completan los datos del proyecto. Luego escribe abajo la misma contraseña.</div>
+      <input type="text" id="sy_code" placeholder="Pega aquí el código de vinculación" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
+      <div class="hint" id="sy_codeMsg">Al pegarlo se completan los datos del proyecto. Luego escribe abajo la misma contraseña.</div>
     </div>
     <div class="field">
       <label for="sy_url">URL del proyecto (Supabase)</label>
@@ -1916,6 +1916,25 @@
     el("overlay").classList.add("open"); el("sysheet").classList.add("open");
   }
   function closeSyncSheet(){ el("overlay").classList.remove("open"); el("sysheet").classList.remove("open"); }
+  // El código de vinculación se aplica en cuanto se pega, no al guardar: el rótulo del
+  // campo promete que los datos del proyecto se completan solos, y así es como se ve.
+  function onLinkCodeInput(){
+    var msg=el("sy_codeMsg"), code=el("sy_code").value.trim();
+    if(!code){
+      msg.textContent="Al pegarlo se completan los datos del proyecto. Luego escribe abajo la misma contraseña.";
+      msg.style.color=""; return;
+    }
+    var o=parseLinkCode(code);
+    if(o){
+      el("sy_url").value=o.url; el("sy_key").value=o.key;
+      sync.cfg=sync.cfg||{}; sync.cfg.id=o.id; sync.cfg.salt=o.salt;
+      msg.textContent="✓ Datos del proyecto completados. Ahora escribe la misma contraseña de cifrado del otro dispositivo.";
+      msg.style.color="var(--st-plan)";
+    } else {
+      msg.textContent="Aún no se reconoce el código. Debe copiarse completo, sin espacios ni cortes.";
+      msg.style.color="var(--st-proc)";
+    }
+  }
   function applyLinkCodeField(){
     var code=el("sy_code").value.trim();
     if(!code) return false;
@@ -2026,6 +2045,7 @@
     });
     el("sycloseSheet").addEventListener("click",closeSyncSheet);
     el("sysaveBtn").addEventListener("click",saveSyncSheet);
+    el("sy_code").addEventListener("input",onLinkCodeInput);
     el("setSyncCode").addEventListener("click",mostrarCodigo);
     el("setSyncNow").addEventListener("click",function(){ syncNow(); });
     el("setSyncOff").addEventListener("click",desactivarSync);
