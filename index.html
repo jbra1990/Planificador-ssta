@@ -744,6 +744,11 @@
             <span class="st"><span class="t">Sincronizar ahora</span><span class="d">Sube y baja los cambios pendientes</span></span>
             <span class="chev">›</span>
           </button>
+          <button class="set-row danger" id="setSyncTakeover" style="width:100%;text-align:left;display:none">
+            <span class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v10"/><path d="M8 7l4-4 4 4"/><rect x="3" y="13" width="18" height="8" rx="2"/></svg></span>
+            <span class="st"><span class="t">Reemplazar los datos de la nube</span><span class="d">Sube lo de este equipo con la contraseña actual y descarta la copia cifrada anterior</span></span>
+            <span class="chev">›</span>
+          </button>
           <button class="set-row danger" id="setSyncOff" style="width:100%;text-align:left">
             <span class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.4 18.4A9 9 0 0 1 5.6 5.6M2 2l20 20"/></svg></span>
             <span class="st"><span class="t">Desactivar sincronización</span><span class="d">Deja de subir y bajar cambios en este equipo</span></span>
@@ -1858,7 +1863,13 @@
       })
       .catch(function(err){
         var m=String(err&&err.message||err);
-        if(/formato|decrypt|operation/i.test(m)) setSyncStatus("err","contraseña incorrecta");
+        // Si lo que falla es descifrar, la copia de la nube está cifrada con otra
+        // contraseña. No se puede fusionar, pero sí ofrecer reemplazarla (ver
+        // syncTakeover): sin esa salida, un cambio de contraseña deja la
+        // sincronización atascada para siempre, porque la subida va después de la
+        // bajada y nunca llega a ejecutarse.
+        sync.mismatch = /formato|decrypt|operation/i.test(m) || (err && err.name==="OperationError");
+        if(sync.mismatch) setSyncStatus("err","contraseña incorrecta");
         else setSyncStatus("err", /Failed to fetch|NetworkError/i.test(m) ? "sin acceso a la nube" : m.slice(0,60));
         if(!silent) toast("No se pudo sincronizar: "+sync.msg);
       })
@@ -1918,6 +1929,8 @@
       pill.querySelector(".sp-t").textContent=txt;
     }
     var d=el("syncActions"); if(d) d.style.display = syncOn() ? "" : "none";
+    var tk=el("setSyncTakeover");
+    if(tk) tk.style.display = (syncOn() && sync.mismatch) ? "" : "none";
     // Estado también en el panel lateral (única vía visible en el celular)
     var sTx=el("sbStatusTx"), sDot=el("sbDot");
     if(sTx) sTx.textContent = syncOn() ? ("SINCRONIZADO · "+txt.toUpperCase()) : "SOLO EN ESTE DISPOSITIVO";
@@ -1981,6 +1994,24 @@
     saveSyncCfg(); closeSyncSheet(); startSyncLoop(); renderSyncUI();
     syncNow().then(function(){
       if(sync.status==="ok") toast("Sincronización activada ✓");
+    });
+  }
+  // Salida cuando la copia de la nube quedó cifrada con otra contraseña: sube lo de este
+  // equipo con la contraseña actual, sin intentar bajar antes. Es destructivo para lo que
+  // hubiera en la nube, así que se confirma de forma explícita.
+  function syncTakeover(){
+    if(!syncOn()) return;
+    if(!confirm("Los datos que están en la nube se cifraron con otra contraseña y no se pueden leer.\n\n"+
+                "Se van a REEMPLAZAR por los de este equipo ("+state.items.length+" actividades y "+
+                state.accidentes.length+" accidentes), cifrados con la contraseña actual.\n\n"+
+                "Lo que hubiera en la nube y no esté aquí se pierde. ¿Continuar?")) return;
+    setSyncStatus("busy","subiendo…");
+    syncPush().then(function(){
+      sync.mismatch=false; sync.lastAt=Date.now(); setSyncStatus("ok","");
+      toast("Nube reemplazada ✓ Usa esta misma contraseña en tus otros dispositivos");
+    }).catch(function(err){
+      setSyncStatus("err", String(err&&err.message||err).slice(0,60));
+      toast("No se pudo subir: "+sync.msg);
     });
   }
   function mostrarCodigo(){
@@ -2069,6 +2100,7 @@
     });
     el("setSyncCode").addEventListener("click",mostrarCodigo);
     el("setSyncNow").addEventListener("click",function(){ syncNow(); });
+    el("setSyncTakeover").addEventListener("click",syncTakeover);
     el("setSyncOff").addEventListener("click",desactivarSync);
     el("syncPill").addEventListener("click",function(){ syncNow(); });
     window.addEventListener("online",function(){ syncNow(true); });
