@@ -1,3 +1,7 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
 <title>SST Planner — Coordinación de Seguridad</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#1F2E4A" />
@@ -162,10 +166,11 @@
   .alert .go { margin-left: auto; border: none; background: var(--st-late); color: #2a0509; font-weight: 750; font-size: 12.5px; padding: 8px 13px; border-radius: 10px; flex: 0 0 auto; }
 
   /* ---------- KPI row ---------- */
-  .kpirow { display: flex; gap: 12px; overflow-x: auto; padding: 2px 2px 8px; margin: 0 -2px 8px; scrollbar-width: none; }
-  .kpirow::-webkit-scrollbar { display: none; }
+  /* En celular van 2×2: los cuatro indicadores quedan a la vista sin desplazar,
+     incluido "Atrasadas", que es el que hay que ver de inmediato. */
+  .kpirow { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 2px 0 8px; margin: 0 0 8px; }
   .kpi {
-    flex: 0 0 auto; min-width: 158px; border-radius: var(--r); padding: 15px 16px 13px;
+    min-width: 0; border-radius: var(--r); padding: 15px 16px 13px;
     background: var(--card); border: 1px solid var(--border); position: relative; overflow: hidden;
   }
   .kpi .kl { font-size: 11.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 650; }
@@ -180,8 +185,7 @@
   .kpi .spark { position: absolute; right: 12px; bottom: 12px; opacity: .9; }
   /* En pantallas anchas: 4 columnas iguales que ocupan todo el ancho (centrado/balanceado) */
   @media (min-width: 700px) {
-    .kpirow { display: grid; grid-template-columns: repeat(4, 1fr); overflow: visible; }
-    .kpi { min-width: 0; }
+    .kpirow { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   }
 
   /* ---------- Toolbar ---------- */
@@ -198,6 +202,9 @@
     padding: 11px 34px 11px 15px; width: 100%; font-weight: 600; border-radius: 999px; outline: none;
   }
   .chip::after { content: ""; position: absolute; right: 15px; top: 50%; width: 8px; height: 8px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: translateY(-70%) rotate(45deg); pointer-events: none; }
+  /* En celular cada filtro ocupa su propia fila: un <select> recorta el texto en vez
+     de ajustarlo, y a dos por fila se cortaba "Todos los estatus". */
+  @media (max-width: 620px) { .chip { flex-basis: 100%; } }
 
   /* ---------- Activity cards ---------- */
   .cards { display: flex; flex-direction: column; gap: 13px; }
@@ -368,6 +375,10 @@
   .fab svg { width: 28px; height: 28px; }
   .fab:active { transform: scale(.93); }
   .fab[hidden] { display: none; }
+  /* Con el menú abierto el botón de nueva actividad estorba: el velo lo atenúa
+     pero no lo tapa, así que se retira mientras dure el cajón. */
+  body.navopen .fab { opacity: 0; pointer-events: none; transform: scale(.85); }
+  .fab { transition: opacity .2s, transform .2s; }
 
   /* ---------- Accidentes ---------- */
   .acc-card { position: relative; background: var(--card); border: 1px solid var(--border); border-left: 4px solid var(--sev, var(--muted)); border-radius: var(--r); padding: 15px 16px 14px; cursor: pointer; transition: border-color .12s, transform .05s; }
@@ -534,6 +545,8 @@
   .toast { position: fixed; left: 50%; bottom: calc(28px + env(safe-area-inset-bottom)); transform: translate(-50%, 14px); background: #0e1626; border: 1px solid var(--border-2); color: var(--ink); padding: 11px 18px; border-radius: 999px; font-size: 13.5px; font-weight: 650; box-shadow: 0 12px 30px rgba(0,0,0,.4); opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 60; }
   .toast.show { opacity: 1; transform: translate(-50%, 0); }
 </style>
+</head>
+<body>
 
 <div class="app">
   <aside class="sidebar" id="sidebar">
@@ -1864,10 +1877,12 @@
   function openNav(){
     if(!navIsDrawer()) return;
     el("sidebar").classList.add("open"); el("navScrim").classList.add("open");
+    document.body.classList.add("navopen");
     el("hamb").setAttribute("aria-expanded","true");
   }
   function closeNav(){
     el("sidebar").classList.remove("open"); el("navScrim").classList.remove("open");
+    document.body.classList.remove("navopen");
     el("hamb").setAttribute("aria-expanded","false");
   }
   function toggleNav(){ el("sidebar").classList.contains("open") ? closeNav() : openNav(); }
@@ -2093,3 +2108,5 @@
   }
 })();
 </script>
+</body>
+</html>

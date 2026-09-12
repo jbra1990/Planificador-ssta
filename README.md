@@ -63,4 +63,16 @@ Sin sincronización, los datos se trasladan con *Ajustes → Respaldo cifrado* y
 |---|---|
 | `index.html` | La aplicación completa: estructura, estilos y lógica. |
 | `sw.js` | Service worker: permite usarla sin conexión una vez publicada. |
+| `build.sh` | Arma el `index.html` del sitio a partir del fragmento fuente. |
 | `SINCRONIZACION.md` | Guía para activar la sincronización entre dispositivos. |
+
+`index.html` se genera; no conviene editarlo a mano:
+
+```sh
+./build.sh ruta/al/fragmento.html
+```
+
+El fragmento trae título, metas, estilos y marcado, sin el envoltorio del
+documento, para poder publicarlo también como artifact. El script le añade
+`<!doctype html>`, `<html lang="es">` y el `<meta charset>`, necesarios para que
+el navegador use el modo estándar y el diseño coincida con el probado.
