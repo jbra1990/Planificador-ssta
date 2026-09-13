@@ -20,6 +20,14 @@ self.addEventListener("activate", function (e) {
    al instante) y se guarda una copia; sin internet se sirve la copia guardada. */
 self.addEventListener("fetch", function (e) {
   if (e.request.method !== "GET") return;
+
+  /* Sólo se toca lo que sirve este mismo sitio. Antes se guardaba en caché la respuesta de
+     cualquier GET, incluida la de la base de datos: aunque va cifrada, no tiene por qué
+     quedar copiada en el disco del dispositivo. Las peticiones a la nube pasan de largo. */
+  var url;
+  try { url = new URL(e.request.url); } catch (err) { return; }
+  if (url.origin !== self.location.origin) return;
+
   e.respondWith(
     fetch(e.request).then(function (res) {
       var copy = res.clone();
