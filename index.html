@@ -84,12 +84,12 @@
   }
   /* Vidrio esmerilado en todas las superficies. -webkit- es necesario para Safari/iOS. */
   .kpi, .panel, .mini, .set-group, .chip, .search, .pcol, .col, .pcard, .kcard,
-  .acard, .acc-card, .deadline-box, .topbar, .sidebar, .sheet, .toast, .bell,
+  .acard, .acc-card, .proy-card, .etapa, .deadline-box, .topbar, .sidebar, .sheet, .toast, .bell,
   .sync-pill, .sb-user, .set-row .si, .alert {
     backdrop-filter: var(--blur);
     -webkit-backdrop-filter: var(--blur);
   }
-  .kpi, .panel, .mini, .set-group, .pcard, .acard, .acc-card, .pcol, .col, .kcard { box-shadow: var(--sheen), var(--lift); }
+  .kpi, .panel, .mini, .set-group, .pcard, .acard, .acc-card, .proy-card, .pcol, .col, .kcard { box-shadow: var(--sheen), var(--lift); }
   /* Si el navegador no soporta el desenfoque, se opacan un poco para no perder legibilidad */
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     :root { --card: rgba(40,58,96,.92); --card-2: rgba(56,78,124,.92); --bg-2: rgba(34,50,86,.96); }
@@ -388,6 +388,82 @@
   body.navopen .fab { opacity: 0; pointer-events: none; transform: scale(.85); }
   .fab { transition: opacity .2s, transform .2s; }
 
+
+  /* ---------- Proyectos ---------- */
+  .proy-grid { display: grid; grid-template-columns: 1fr; gap: 13px; }
+  @media (min-width: 780px)  { .proy-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1280px) { .proy-grid { grid-template-columns: repeat(3, 1fr); } }
+  .proy-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--r);
+    padding: 16px 17px 14px; display: flex; flex-direction: column; gap: 11px;
+  }
+  .proy-card.alerta { border-color: rgba(251,110,133,.42); background: linear-gradient(160deg, rgba(251,110,133,.16), rgba(251,110,133,.05)); }
+  .proy-top { display: flex; gap: 7px; flex-wrap: wrap; }
+  .est-tag { font-family: var(--mono); font-size: 10.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
+             padding: 5px 9px; border-radius: 7px; background: var(--card-2); color: var(--ink-2); border: 1px solid var(--border-2); }
+  .est-tag.e1 { color: var(--st-proc); border-color: rgba(251,191,36,.4); }
+  .est-tag.e2 { color: var(--st-wait); }
+  .est-tag.e3 { color: var(--st-plan); border-color: rgba(52,211,153,.4); }
+  .est-tag.venc { color: var(--st-late); border-color: rgba(251,110,133,.45); background: rgba(251,110,133,.14); }
+  .proy-nom { font-size: 16.5px; font-weight: 760; line-height: 1.25; }
+  .proy-meta { font-size: 12.5px; color: var(--muted); }
+  .proy-barras { display: flex; flex-direction: column; gap: 11px; }
+  .pb-l { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: var(--muted); font-weight: 650; margin-bottom: 5px; }
+  .pb-l b { font-size: 15px; color: var(--ink); font-weight: 800; }
+  .pb-l b.ok { color: var(--st-plan); } .pb-l b.warn { color: var(--st-proc); } .pb-l b.crit { color: var(--st-late); }
+  .pb-n { font-size: 11.5px; color: var(--muted); margin-top: 5px; }
+  .barra { height: 8px; border-radius: 99px; background: rgba(255,255,255,.10); overflow: hidden; }
+  .barra span { display: block; height: 100%; border-radius: 99px; background: var(--grad); transition: width .35s ease; }
+  .barra span.cu { background: var(--st-plan); }
+  .barra span.cu.warn { background: var(--st-proc); }
+  .barra span.cu.crit { background: var(--st-late); }
+  .proy-foot { display: flex; align-items: center; gap: 10px; margin-top: 2px; }
+  .proy-prox { font-size: 12.5px; color: var(--muted); }
+  .proy-prox b { color: var(--ink-2); }
+  .proy-foot .acc-btn { margin-left: auto; }
+
+  /* detalle */
+  .volver { background: none; border: none; color: var(--cyan); font-weight: 700; font-size: 14px; padding: 4px 0 12px; }
+  .pd-head { padding: 18px; }
+  .pd-tit { display: flex; align-items: flex-start; gap: 12px; }
+  .pd-tit h2 { font-size: 21px; font-weight: 800; line-height: 1.2; flex: 1; }
+  .pd-desc { font-size: 13.5px; color: var(--ink-2); margin: 10px 0 0; }
+  .pd-head .acc-dates { margin-top: 14px; }
+  .pd-head .proy-barras { margin-top: 14px; }
+  .pd-etapas-h { display: flex; align-items: center; gap: 12px; margin: 20px 2px 12px; }
+  .pd-etapas-h h3 { font-family: var(--mono); font-size: 14px; font-weight: 750; letter-spacing: .06em; text-transform: uppercase; flex: 1; }
+  .btn.small { padding: 9px 14px; font-size: 13px; flex: 0 0 auto; }
+
+  .etapa { background: var(--card); border: 1px solid var(--border); border-left: 3px solid var(--border-2); border-radius: var(--r-sm); padding: 14px 15px; margin-bottom: 11px; }
+  .etapa.hecha { border-left-color: var(--st-plan); opacity: .82; }
+  .etapa.venc { border-left-color: var(--st-late); background: linear-gradient(160deg, rgba(251,110,133,.14), rgba(251,110,133,.04)); }
+  .et-top { display: flex; align-items: flex-start; gap: 12px; }
+  .et-chk { width: 26px; height: 26px; border-radius: 8px; border: 1.5px solid var(--border-2); background: transparent; color: transparent; display: grid; place-items: center; flex: 0 0 auto; margin-top: 1px; }
+  .et-chk svg { width: 15px; height: 15px; }
+  .et-chk.on { background: var(--st-plan); border-color: var(--st-plan); color: #04231a; }
+  .et-tx { flex: 1; min-width: 0; }
+  .et-nom { font-size: 14.5px; font-weight: 700; line-height: 1.3; }
+  .etapa.hecha .et-nom { text-decoration: line-through; color: var(--ink-2); }
+  .et-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .et-nota { font-size: 12.5px; color: var(--ink-2); margin: 9px 0 0 38px; padding-left: 10px; border-left: 2px solid var(--border-2); }
+  .et-acts { display: flex; gap: 7px; flex-wrap: wrap; margin: 11px 0 0 38px; }
+  .mini-btn { border: 1px solid var(--border-2); background: var(--card-2); color: var(--ink-2); border-radius: 8px; padding: 7px 11px; font-size: 12.5px; font-weight: 650; }
+  .mini-btn:hover { color: var(--ink); border-color: var(--cyan); }
+  .mini-btn.del { color: var(--st-late); }
+  .ev-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 9px; margin: 12px 0 0 38px; }
+  .ev { position: relative; margin: 0; border: 1px solid var(--border-2); border-radius: 10px; overflow: hidden; background: var(--card-2); }
+  .ev img { display: block; width: 100%; height: 92px; object-fit: cover; }
+  .ev-txt { padding: 10px; font-size: 12px; color: var(--ink-2); min-height: 92px; }
+  .ev figcaption { padding: 6px 8px; font-size: 10.5px; color: var(--ink-2); font-weight: 650; line-height: 1.3; word-break: break-word; }
+  .ev figcaption span { display: block; color: var(--muted); font-weight: 400; margin-top: 2px; }
+  .ev-del { position: absolute; top: 5px; right: 5px; width: 24px; height: 24px; border-radius: 50%; border: none;
+            background: rgba(8,14,28,.78); color: #fff; font-size: 17px; line-height: 1; display: grid; place-items: center; }
+  .empty.small { padding: 26px 16px; }
+  @media (max-width: 520px) {
+    .et-nota, .et-acts, .ev-grid { margin-left: 0; }
+    .ev-grid { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+  }
+
   /* ---------- Accidentes ---------- */
   .acc-card { position: relative; background: var(--card); border: 1px solid var(--border); border-left: 4px solid var(--sev, var(--muted)); border-radius: var(--r); padding: 15px 16px 14px; cursor: pointer; transition: border-color .12s, transform .05s; }
   .acc-card:hover { border-color: var(--border-2); }
@@ -598,6 +674,8 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.1V12a10 10 0 1 1-5.9-9.1"/><path d="M22 4 12 14.01l-3-3"/></svg><span>Completadas</span></button>
       <button class="snav" data-tab="accidentes">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg><span>Accidentes</span><span class="nav-badge" id="sbAccBadge">0</span></button>
+      <button class="snav" data-tab="proyectos">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18v13a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/></svg><span>Proyectos</span><span class="nav-badge" id="sbProyBadge">0</span></button>
       <button class="snav" data-tab="board">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="7" height="7" rx="1"/><rect x="14" y="4" width="7" height="7" rx="1"/><rect x="3" y="15" width="7" height="5" rx="1"/><rect x="14" y="15" width="7" height="5" rx="1"/></svg><span>Tablero</span></button>
       <button class="snav" data-tab="analisis">
@@ -666,6 +744,44 @@
     <section class="screen" id="s-completadas" hidden>
       <h2 class="screen-title">Completadas <span class="dim" id="doneCount"></span></h2>
       <div class="cards" id="doneCards"></div>
+    </section>
+
+
+    <!-- ============ PROYECTOS ============ -->
+    <section class="screen" id="s-proyectos" hidden>
+      <div id="proyLista">
+        <div class="kpirow" id="proyKpis"></div>
+        <div class="toolbar">
+          <button class="btn primary" id="proyNewBtn" style="flex:1 1 100%">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" width="17" height="17"><path d="M12 5v14M5 12h14"/></svg>
+            Nuevo proyecto
+          </button>
+          <div class="chip"><select id="proyFEstado" aria-label="Estado del proyecto">
+            <option value="">Todos los estados</option>
+          </select></div>
+        </div>
+        <h2 class="screen-title">Proyectos <span class="dim" id="proyCount"></span></h2>
+        <div class="proy-grid" id="proyCards"></div>
+      </div>
+
+      <div id="proyDetalle" hidden>
+        <button class="volver" id="pdVolver">‹ Todos los proyectos</button>
+        <div class="panel pd-head">
+          <div class="pd-tit">
+            <h2 id="pdNombre"></h2>
+            <button class="mini-btn" id="pdEditar">Editar</button>
+          </div>
+          <div class="proy-meta" id="pdMeta"></div>
+          <p class="pd-desc" id="pdDesc" hidden></p>
+          <div class="acc-dates" id="pdFechas"></div>
+          <div class="proy-barras" id="pdBarras"></div>
+        </div>
+        <div class="pd-etapas-h">
+          <h3>Etapas</h3>
+          <button class="btn primary small" id="pdNuevaEtapa">+ Añadir etapa</button>
+        </div>
+        <div id="pdEtapas"></div>
+      </div>
     </section>
 
     <!-- ============ ACCIDENTES ============ -->
@@ -827,6 +943,8 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
       <span class="nl">Accid.</span><span class="nav-badge" id="nbAccBadge">0</span>
     </button>
+    <button class="navbtn" data-tab="proyectos">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18v13a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Proyectos</span></button>
     <button class="navbtn" data-tab="board">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="7" height="7" rx="1"/><rect x="14" y="4" width="7" height="7" rx="1"/><rect x="3" y="15" width="7" height="5" rx="1"/><rect x="14" y="15" width="7" height="5" rx="1"/></svg>
       <span class="nl">Tablero</span>
@@ -940,11 +1058,84 @@
   </div>
 </aside>
 
+
+<!-- Sheet: proyecto -->
+<aside class="sheet" id="psheet" role="dialog" aria-modal="true" aria-labelledby="psheetTitle">
+  <div class="grab"></div>
+  <div class="sheet-h">
+    <h2 id="psheetTitle">Nuevo proyecto</h2>
+    <button class="x" id="pcloseSheet" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="sheet-b">
+    <div class="field" id="pw_nombre">
+      <label for="p_nombre">Nombre del proyecto <span class="req">*</span></label>
+      <input type="text" id="p_nombre" placeholder="Ej. Instalación de líneas de vida" />
+      <div class="err">Indica el nombre del proyecto.</div>
+    </div>
+    <div class="field"><label for="p_desc">Descripción / alcance</label>
+      <textarea id="p_desc" placeholder="Qué comprende, dónde y con qué criterio se da por cumplido…"></textarea></div>
+    <div class="field"><label for="p_resp">Responsable</label>
+      <input type="text" id="p_resp" placeholder="Ej. Jairo Bravo" /></div>
+    <div class="field"><label for="p_sede">Localidad y área</label>
+      <div class="frow">
+        <select id="p_sede"><option>Matriz</option><option>Regional Norte</option></select>
+        <input type="text" id="p_area" placeholder="Área" />
+      </div>
+    </div>
+    <div class="field"><label for="p_ini">Fechas</label>
+      <div class="frow">
+        <input type="date" id="p_ini" aria-label="Fecha de inicio" />
+        <input type="date" id="p_fin" aria-label="Fecha de fin prevista" />
+      </div>
+      <div class="hint">Inicio y fin previsto del proyecto completo.</div>
+    </div>
+    <div class="field"><label for="p_estado">Estado</label><select id="p_estado"></select></div>
+  </div>
+  <div class="sheet-f">
+    <button class="btn del" id="pdelBtn" style="display:none">Eliminar</button>
+    <button class="btn primary" id="psaveBtn">Guardar</button>
+  </div>
+</aside>
+
+<!-- Sheet: etapa -->
+<aside class="sheet" id="esheet" role="dialog" aria-modal="true" aria-labelledby="esheetTitle">
+  <div class="grab"></div>
+  <div class="sheet-h">
+    <h2 id="esheetTitle">Nueva etapa</h2>
+    <button class="x" id="ecloseSheet" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="sheet-b">
+    <div class="field" id="ew_nombre">
+      <label for="e_nombre">Nombre de la etapa <span class="req">*</span></label>
+      <input type="text" id="e_nombre" placeholder="Ej. Ensayo de carga y certificación" />
+      <div class="err">Indica el nombre de la etapa.</div>
+    </div>
+    <div class="field"><label for="e_resp">Responsable</label>
+      <input type="text" id="e_resp" placeholder="Quién la ejecuta" /></div>
+    <div class="field"><label for="e_cump">Fecha de cumplimiento</label>
+      <input type="date" id="e_cump" /></div>
+    <div class="field"><label for="e_estado">Estado</label><select id="e_estado"></select></div>
+    <div class="field" id="ew_cierre" style="display:none">
+      <label for="e_cierre">Fecha real de cierre</label>
+      <input type="date" id="e_cierre" />
+      <div class="hint">Si es posterior a la fecha de cumplimiento, la etapa cuenta como fuera de plazo.</div>
+    </div>
+    <div class="field"><label for="e_notas">Notas</label>
+      <textarea id="e_notas" placeholder="Observaciones, pendientes, condiciones…"></textarea></div>
+  </div>
+  <div class="sheet-f">
+    <button class="btn del" id="edelBtn" style="display:none">Eliminar</button>
+    <button class="btn primary" id="esaveBtn">Guardar</button>
+  </div>
+</aside>
+
+<input type="file" id="evFile" accept="image/*" multiple hidden />
+
 <!-- Sheet: accidentes -->
 <aside class="sheet" id="asheet" role="dialog" aria-modal="true" aria-labelledby="asheetTitle">
   <div class="grab" id="agrab"></div>
   <div class="sheet-h">
-    <h2 id="asheetTitle">Registrar accidente</h2>
+    <h2 id="asheetTitle">Reporte de evento</h2>
     <button class="x" id="acloseSheet" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
   </div>
   <div class="sheet-b">
@@ -1028,8 +1219,8 @@
   var AVA = ["#4E7EF4","#35E0F0","#A78BFA","#34D399","#FBBF24","#FB6E85","#38BDF8"];
   var PRI_META = { "Alta":{lab:"ALTA",col:"#FB6E85"}, "Media":{lab:"MEDIA",col:"#FBBF24"}, "Baja":{lab:"BAJA",col:"#94A3B8"} };
 
-  var state = { items: [], accidentes: [], tombs: {}, tab: "planner", search: "", fTipo: "", fEstatus: "", fPrioridad: "",
-                accFTipo: "", accFSede: "", accFEstado: "" };
+  var state = { items: [], accidentes: [], proyectos: [], tombs: {}, tab: "planner", search: "", fTipo: "", fEstatus: "", fPrioridad: "",
+                accFTipo: "", accFSede: "", accFEstado: "", proyAbierto: null, proyFEstado: "" };
   var editingId = null;
 
   function el(id){ return document.getElementById(id); }
@@ -1071,7 +1262,7 @@
   // Cada registro lleva updatedAt y los borrados dejan una "lápida" (tombs), para que la
   // sincronización pueda fusionar cambios hechos en distintos dispositivos sin perder nada.
   var TOMB_KEY="sst_tombs_v1";
-  var snapItems={}, snapAcc={};
+  var snapItems={}, snapAcc={}, snapProy={};
   function snapOf(it){ var c={},k; for(k in it) if(k!=="updatedAt") c[k]=it[k]; return JSON.stringify(c); }
   function reconcile(arr, snap){
     var now=Date.now(), seen={};
@@ -1367,13 +1558,21 @@
   }
 
   // ---------- render dispatch ----------
+
+  function llenarSelectsProyecto(){
+    var op=function(v){ return '<option>'+esc(v)+'</option>'; };
+    el("p_estado").innerHTML = PROY_ESTADOS.map(op).join("");
+    el("e_estado").innerHTML = ETAPA_ESTADOS.map(op).join("");
+    el("proyFEstado").innerHTML = '<option value="">Todos los estados</option>' + PROY_ESTADOS.map(op).join("");
+  }
+
   function render(){
-    renderAlert(); renderKPIs(); renderCards(); renderCompleted(); renderKanban(); renderAnalytics(); renderAccidentes();
+    renderAlert(); renderKPIs(); renderCards(); renderCompleted(); renderKanban(); renderAnalytics(); renderAccidentes(); renderProyectos();
   }
 
   function setTab(t){
     state.tab=t;
-    ["planner","completadas","accidentes","board","analisis","ajustes"].forEach(function(x){ el("s-"+x).hidden=(x!==t); });
+    ["planner","completadas","accidentes","proyectos","board","analisis","ajustes"].forEach(function(x){ el("s-"+x).hidden=(x!==t); });
     Array.prototype.forEach.call(document.querySelectorAll(".navbtn, .snav"),function(b){ b.classList.toggle("active", b.getAttribute("data-tab")===t); });
     el("fab").hidden=!(t==="planner"||t==="board");
     window.scrollTo({top:0,behavior:"smooth"});
@@ -1480,7 +1679,7 @@
     return '"'+v.replace(/"/g,'""')+'"';
   }
   function stamp(){ var d=new Date(); return d.getFullYear()+("0"+(d.getMonth()+1)).slice(-2)+("0"+d.getDate()).slice(-2); }
-  function backupPayload(){ return { _sst:2, actividades:state.items, accidentes:state.accidentes, feriadosExtra:ferExtra }; }
+  function backupPayload(){ return { _sst:3, actividades:state.items, accidentes:state.accidentes, proyectos:state.proyectos, feriadosExtra:ferExtra }; }
   function exportJSON(){ download("tablero-seguridad-"+stamp()+".json", JSON.stringify(backupPayload(),null,2), "application/json", "Respaldo JSON exportado"); }
   function exportCSV(){
     var cols=["actividad","tipo","estatus","prioridad","responsable","fecha","cierre","cumplimiento","involucrados","notas"];
@@ -1504,21 +1703,25 @@
     .catch(function(){ alert("No se pudo cifrar."); });
   }
   function applyImported(data){
-    var arr, accs=null, fex=null;
+    var arr, accs=null, proys=null, fex=null;
     if(Array.isArray(data)){ arr=data; }                                  // respaldo antiguo (solo actividades)
-    else if(data && Array.isArray(data.actividades)){ arr=data.actividades; accs=data.accidentes||[]; fex=data.feriadosExtra||null; }
+    else if(data && Array.isArray(data.actividades)){
+      arr=data.actividades; accs=data.accidentes||[]; proys=data.proyectos||[]; fex=data.feriadosExtra||null;
+    }
     else { alert("El archivo no contiene datos válidos."); return; }
     arr.forEach(function(it){ if(!it.id) it.id=uid(); });
     if(accs) accs.forEach(function(a){ if(!a.id) a.id=uid(); });
-    var resumen=arr.length+" actividad(es)"+(accs?" y "+accs.length+" accidente(s)":"");
+    if(proys) proys.forEach(function(pr){ if(!pr.id) pr.id=uid(); if(!pr.etapas) pr.etapas=[]; });
+    var resumen=arr.length+" actividad(es)"+(accs?" y "+accs.length+" accidente(s)":"")+(proys&&proys.length?" y "+proys.length+" proyecto(s)":"");
     if(confirm("¿Reemplazar los datos con "+resumen+"?\n\nAceptar = reemplazar · Cancelar = combinar")){
-      state.items=arr; if(accs) state.accidentes=accs;
+      state.items=arr; if(accs) state.accidentes=accs; if(proys) state.proyectos=proys;
     } else {
       var by={}; state.items.forEach(function(i){by[i.id]=1;}); arr.forEach(function(i){ if(!by[i.id]) state.items.push(i); });
       if(accs){ var ba={}; state.accidentes.forEach(function(a){ba[a.id]=1;}); accs.forEach(function(a){ if(!ba[a.id]) state.accidentes.push(a); }); }
+      if(proys){ var bp={}; state.proyectos.forEach(function(x){bp[x.id]=1;}); proys.forEach(function(x){ if(!bp[x.id]) state.proyectos.push(x); }); }
     }
     if(fex && fex.length){ fex.forEach(function(d){ if(ferExtra.indexOf(d)<0) ferExtra.push(d); }); saveFeriadosExtra(); updateSetFeriadosSub(); }
-    save(); saveAcc(); render(); toast("Datos importados");
+    save(); saveAcc(); saveProyectos(); render(); toast("Datos importados");
   }
   function importFile(file){
     var r=new FileReader();
@@ -1537,7 +1740,7 @@
   }
 
   // ================= ACCIDENTES =================
-  var ACC_KEY="sst_accidentes_v1", FER_KEY="sst_feriados_extra_v1";
+  var ACC_KEY="sst_accidentes_v1", FER_KEY="sst_feriados_extra_v1", PROY_KEY="sst_proyectos_v1";
   // Orden jerárquico (de mayor a menor severidad)
   // El orden es jerárquico y define la prioridad con que se muestran y ordenan.
   var ACC_TIPOS=[
@@ -1884,6 +2087,361 @@
     ["sbAccBadge","nbAccBadge"].forEach(function(id){ var b=el(id); if(b){ b.textContent=n; b.classList.toggle("show", n>0); } });
   }
 
+
+  // ================= PROYECTOS =================
+  // Un proyecto agrupa etapas con su propia fecha de cumplimiento y sus evidencias.
+  // El avance mide cuánto se ha completado; el cumplimiento, cuánto se cerró dentro de
+  // plazo. Son dos cosas distintas: se puede ir al 100 % de avance habiendo incumplido
+  // todas las fechas, y eso tiene que verse.
+  var PROY_ESTADOS=["Planificado","En ejecución","Suspendido","Completado"];
+  var ETAPA_ESTADOS=["Pendiente","En proceso","Completada"];
+
+  function loadProyectos(){
+    try{ state.proyectos=JSON.parse(localStorage.getItem(PROY_KEY))||[]; }catch(e){ state.proyectos=[]; }
+    if(!state.proyectos) state.proyectos=[];
+    state.proyectos.forEach(function(pr){ if(!pr.etapas) pr.etapas=[]; });
+    if(primeSnapshot(state.proyectos, snapProy)) saveProyectos();
+  }
+  function saveProyectos(){
+    reconcile(state.proyectos, snapProy); saveTombs();
+    try{ localStorage.setItem(PROY_KEY, JSON.stringify(state.proyectos)); }
+    catch(e){ avisarEspacio(e); }
+    syncSoon();
+  }
+  // localStorage ronda los 5 MB. Las fotos son lo único que puede agotarlo, así que el
+  // aviso dice qué hacer en lugar de fallar en silencio.
+  function avisarEspacio(e){
+    var q=(e&&(e.name==="QuotaExceededError"||e.code===22));
+    alert(q ? "No hay espacio para guardar más evidencias en este dispositivo.\n\nBorra algunas fotos de proyectos antiguos desde la ficha de cada etapa, o exporta un respaldo y elimina lo que ya no necesites."
+            : "No se pudo guardar: "+(e&&e.message||e));
+  }
+  function pesoEvidencias(){
+    var n=0;
+    state.proyectos.forEach(function(pr){
+      (pr.etapas||[]).forEach(function(et){
+        (et.evidencias||[]).forEach(function(ev){ n += (ev.data?ev.data.length:0)+(ev.texto?ev.texto.length:0); });
+      });
+    });
+    return n;
+  }
+  function fmtPeso(n){
+    if(n<1024) return n+" B";
+    if(n<1048576) return (n/1024).toFixed(0)+" KB";
+    return (n/1048576).toFixed(1)+" MB";
+  }
+
+  function proyById(id){ for(var i=0;i<state.proyectos.length;i++) if(state.proyectos[i].id===id) return state.proyectos[i]; return null; }
+  function etapaById(pr,id){ var e=(pr&&pr.etapas)||[]; for(var i=0;i<e.length;i++) if(e[i].id===id) return e[i]; return null; }
+
+  // ---- métricas ----
+  function etapaVencida(et){
+    return et.estado!=="Completada" && et.fechaCump && et.fechaCump < todayISO();
+  }
+  function proyMetricas(pr){
+    var et=(pr.etapas||[]), total=et.length;
+    var comp=0, aTiempo=0, evaluables=0, venc=0, prox=null;
+    et.forEach(function(e){
+      if(e.estado==="Completada"){
+        comp++; evaluables++;
+        if(!e.fechaCump || !e.fechaCierre || e.fechaCierre<=e.fechaCump) aTiempo++;
+      } else if(etapaVencida(e)){
+        evaluables++; venc++;
+      }
+      if(e.estado!=="Completada" && e.fechaCump && (prox===null || e.fechaCump<prox)) prox=e.fechaCump;
+    });
+    return {
+      total: total,
+      completadas: comp,
+      vencidas: venc,
+      avance: total ? Math.round(comp*100/total) : 0,
+      cumplimiento: evaluables ? Math.round(aTiempo*100/evaluables) : null,
+      proxima: prox
+    };
+  }
+  function proyFiltrados(){
+    var f=state.proyFEstado;
+    var arr=state.proyectos.filter(function(pr){ return !f || (pr.estado||"Planificado")===f; });
+    // Primero lo que apremia: etapas vencidas, luego el vencimiento más próximo.
+    return arr.sort(function(x,y){
+      var mx=proyMetricas(x), my=proyMetricas(y);
+      if((my.vencidas>0)-(mx.vencidas>0)) return (my.vencidas>0)-(mx.vencidas>0);
+      var a=mx.proxima||"9999-12-31", b=my.proxima||"9999-12-31";
+      if(a!==b) return a<b?-1:1;
+      return (x.nombre||"").localeCompare(y.nombre||"");
+    });
+  }
+
+  // ---- lista ----
+  function barraHTML(pct,cls){
+    return '<div class="barra"><span class="'+(cls||"")+'" style="width:'+Math.max(0,Math.min(100,pct))+'%"></span></div>';
+  }
+  function proyCardHTML(pr){
+    var m=proyMetricas(pr), est=pr.estado||"Planificado";
+    var alerta = m.vencidas>0;
+    var meta=[pr.responsable, pr.area, pr.sede].filter(Boolean).join(" · ");
+    var cumpl = m.cumplimiento===null ? "—" : m.cumplimiento+"%";
+    var cumplCls = m.cumplimiento===null ? "" : (m.cumplimiento>=90?"ok":(m.cumplimiento>=70?"warn":"crit"));
+    return '<div class="proy-card'+(alerta?" alerta":"")+'" data-proyid="'+pr.id+'">'+
+      '<div class="proy-top">'+
+        '<span class="est-tag e'+PROY_ESTADOS.indexOf(est)+'">'+esc(est)+'</span>'+
+        (alerta?'<span class="est-tag venc">'+m.vencidas+' etapa'+(m.vencidas===1?"":"s")+' vencida'+(m.vencidas===1?"":"s")+'</span>':'')+
+      '</div>'+
+      '<div class="proy-nom">'+esc(pr.nombre)+'</div>'+
+      (meta?'<div class="proy-meta">'+esc(meta)+'</div>':'')+
+      '<div class="proy-barras">'+
+        '<div class="pb"><div class="pb-l"><span>Avance</span><b class="tabnum">'+m.avance+'%</b></div>'+barraHTML(m.avance,"av")+
+          '<div class="pb-n">'+m.completadas+' de '+m.total+' etapa'+(m.total===1?"":"s")+'</div></div>'+
+        '<div class="pb"><div class="pb-l"><span>Cumplimiento</span><b class="tabnum '+cumplCls+'">'+cumpl+'</b></div>'+
+          barraHTML(m.cumplimiento===null?0:m.cumplimiento,"cu "+cumplCls)+
+          '<div class="pb-n">'+(m.cumplimiento===null?"sin etapas evaluables aún":"cerradas dentro de plazo")+'</div></div>'+
+      '</div>'+
+      '<div class="proy-foot">'+
+        '<span class="proy-prox">'+(m.proxima?('Próxima fecha: <b>'+fmtD(m.proxima)+'</b>'):'Sin fechas pendientes')+'</span>'+
+        '<button class="acc-btn" data-proyopen="'+pr.id+'">Abrir</button>'+
+      '</div>'+
+    '</div>';
+  }
+  function renderProyectos(){
+    if(state.proyAbierto && !proyById(state.proyAbierto)) state.proyAbierto=null;
+    el("proyLista").hidden = !!state.proyAbierto;
+    el("proyDetalle").hidden = !state.proyAbierto;
+    if(state.proyAbierto){ renderProyDetalle(); return; }
+
+    var rows=proyFiltrados();
+    el("proyCount").textContent="("+rows.length+")";
+    el("proyCards").innerHTML = rows.length
+      ? rows.map(proyCardHTML).join("")
+      : '<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7h18v13a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><h3>Sin proyectos registrados</h3><div>Usa «Nuevo proyecto» para el primero, por ejemplo la instalación de líneas de vida.</div></div>';
+
+    var tot=state.proyectos.length;
+    var activos=state.proyectos.filter(function(pr){ return (pr.estado||"Planificado")!=="Completado"; });
+    var avg = activos.length ? Math.round(activos.reduce(function(a,pr){ return a+proyMetricas(pr).avance; },0)/activos.length) : 0;
+    var venc = state.proyectos.reduce(function(a,pr){ return a+proyMetricas(pr).vencidas; },0);
+    var evs=[]; state.proyectos.forEach(function(pr){ var m=proyMetricas(pr); if(m.cumplimiento!==null) evs.push(m.cumplimiento); });
+    var cum = evs.length ? Math.round(evs.reduce(function(a,b){return a+b;},0)/evs.length) : null;
+    el("proyKpis").innerHTML=
+      '<div class="kpi accent"><div class="kl">Proyectos</div><div class="kv tabnum">'+tot+'</div><div class="kfoot"><span style="color:var(--muted);font-size:12px">'+activos.length+' en curso</span></div></div>'+
+      '<div class="kpi done"><div class="kl">Avance promedio</div><div class="kv tabnum">'+avg+'%</div><div class="kfoot"><span class="livedot"></span><span style="color:var(--muted);font-size:12px">proyectos activos</span></div></div>'+
+      '<div class="kpi late"><div class="kl">Etapas vencidas</div><div class="kv tabnum">'+venc+'</div><div class="kfoot"><span style="color:var(--muted);font-size:12px">'+(venc?"requieren acción":"ninguna")+'</span></div></div>'+
+      '<div class="kpi proc"><div class="kl">Cumplimiento</div><div class="kv tabnum">'+(cum===null?"—":cum+"%")+'</div><div class="kfoot"><span style="color:var(--muted);font-size:12px">dentro de plazo</span></div></div>';
+
+    var b=el("sbProyBadge"); if(b){ b.textContent=venc; b.classList.toggle("show", venc>0); }
+  }
+
+  // ---- detalle ----
+  function evidenciaHTML(prId,etId,ev){
+    var cuerpo = ev.tipo==="foto"
+      ? '<img src="'+ev.data+'" alt="'+esc(ev.nombre||"Evidencia")+'" loading="lazy" />'
+      : '<div class="ev-txt">'+esc(ev.texto||"")+'</div>';
+    return '<figure class="ev" data-ev="'+ev.id+'">'+cuerpo+
+      '<figcaption>'+esc(ev.nombre||"")+'<span>'+fmtD(ev.fecha)+(ev.data?" · "+fmtPeso(ev.data.length):"")+'</span></figcaption>'+
+      '<button class="ev-del" data-evdel="'+prId+'|'+etId+'|'+ev.id+'" aria-label="Eliminar evidencia">×</button></figure>';
+  }
+  function etapaHTML(pr,et){
+    var venc=etapaVencida(et), comp=(et.estado==="Completada");
+    var dias = et.fechaCump ? daysTo(et.fechaCump) : null;
+    var chip = comp ? '<span class="cdown ok">COMPLETADA</span>'
+             : venc ? '<span class="cdown crit">VENCIDA</span>'
+             : dias===null ? '<span class="cdown">SIN FECHA</span>'
+             : dias<=3 ? '<span class="cdown warn">'+dias+' DÍA'+(dias===1?"":"S")+'</span>'
+             : '<span class="cdown">'+dias+' DÍAS</span>';
+    var evs=(et.evidencias||[]);
+    return '<div class="etapa'+(comp?" hecha":"")+(venc?" venc":"")+'" data-etid="'+et.id+'">'+
+      '<div class="et-top">'+
+        '<button class="et-chk'+(comp?" on":"")+'" data-ettoggle="'+pr.id+'|'+et.id+'" aria-label="Marcar completada">'+CHECK+'</button>'+
+        '<div class="et-tx"><div class="et-nom">'+esc(et.nombre)+'</div>'+
+          '<div class="et-meta">'+[et.responsable, et.fechaCump?("Cumple "+fmtD(et.fechaCump)):"", comp&&et.fechaCierre?("Cerrada "+fmtD(et.fechaCierre)):""].filter(Boolean).map(esc).join(" · ")+'</div></div>'+
+        chip+
+      '</div>'+
+      (et.notas?'<div class="et-nota">'+esc(et.notas)+'</div>':'')+
+      (evs.length?'<div class="ev-grid">'+evs.map(function(ev){ return evidenciaHTML(pr.id,et.id,ev); }).join("")+'</div>':'')+
+      '<div class="et-acts">'+
+        '<button class="mini-btn" data-etfoto="'+pr.id+'|'+et.id+'">+ Foto</button>'+
+        '<button class="mini-btn" data-etnota="'+pr.id+'|'+et.id+'">+ Nota</button>'+
+        '<button class="mini-btn" data-etedit="'+pr.id+'|'+et.id+'">Editar</button>'+
+        '<button class="mini-btn del" data-etdel="'+pr.id+'|'+et.id+'">Eliminar</button>'+
+      '</div>'+
+    '</div>';
+  }
+  function renderProyDetalle(){
+    var pr=proyById(state.proyAbierto); if(!pr) return;
+    var m=proyMetricas(pr);
+    el("pdNombre").textContent=pr.nombre;
+    el("pdMeta").textContent=[pr.responsable, pr.area, pr.sede, pr.estado].filter(Boolean).join(" · ");
+    el("pdDesc").textContent=pr.descripcion||"";
+    el("pdDesc").hidden=!pr.descripcion;
+    el("pdFechas").innerHTML=
+      '<div class="acc-d"><div class="l">Inicio</div><div class="v">'+fmtD(pr.fechaInicio)+'</div></div>'+
+      '<div class="acc-d"><div class="l">Fin previsto</div><div class="v'+(pr.fechaFin&&pr.fechaFin<todayISO()&&m.avance<100?" crit":"")+'">'+fmtD(pr.fechaFin)+'</div></div>'+
+      '<div class="acc-d"><div class="l">Etapas</div><div class="v">'+m.completadas+' / '+m.total+'</div></div>';
+    el("pdBarras").innerHTML=
+      '<div class="pb"><div class="pb-l"><span>Avance</span><b class="tabnum">'+m.avance+'%</b></div>'+barraHTML(m.avance,"av")+'</div>'+
+      '<div class="pb"><div class="pb-l"><span>Cumplimiento</span><b class="tabnum">'+(m.cumplimiento===null?"—":m.cumplimiento+"%")+'</b></div>'+
+        barraHTML(m.cumplimiento===null?0:m.cumplimiento,"cu")+'</div>';
+    var et=(pr.etapas||[]).slice().sort(function(a,b){
+      return (a.fechaCump||"9999-12-31").localeCompare(b.fechaCump||"9999-12-31");
+    });
+    el("pdEtapas").innerHTML = et.length ? et.map(function(e){ return etapaHTML(pr,e); }).join("")
+      : '<div class="empty small"><h3>Sin etapas</h3><div>Añade los pasos del proyecto con su fecha de cumplimiento.</div></div>';
+  }
+
+
+  // ---- formularios de proyecto y etapa ----
+  var editingProy=null, editingEtapa=null;
+  function openProy(pr){
+    editingProy=pr?pr.id:null;
+    el("psheetTitle").textContent=pr?"Editar proyecto":"Nuevo proyecto";
+    el("p_nombre").value=pr?pr.nombre:"";
+    el("p_desc").value=pr?(pr.descripcion||""):"";
+    el("p_resp").value=pr?(pr.responsable||""):"";
+    el("p_sede").value=pr?(pr.sede||"Matriz"):"Matriz";
+    el("p_area").value=pr?(pr.area||""):"";
+    el("p_ini").value=pr?(pr.fechaInicio||""):todayISO();
+    el("p_fin").value=pr?(pr.fechaFin||""):"";
+    el("p_estado").value=pr?(pr.estado||"Planificado"):"Planificado";
+    el("pdelBtn").style.display=pr?"":"none";
+    el("pw_nombre").classList.remove("invalid");
+    el("overlay").classList.add("open"); el("psheet").classList.add("open");
+    setTimeout(function(){ el("p_nombre").focus(); },80);
+  }
+  function closeProy(){ el("overlay").classList.remove("open"); el("psheet").classList.remove("open"); editingProy=null; }
+  function saveProyForm(){
+    var nombre=el("p_nombre").value.trim();
+    if(!nombre){ el("pw_nombre").classList.add("invalid"); el("p_nombre").focus(); return; }
+    var datos={ nombre:nombre, descripcion:el("p_desc").value.trim(), responsable:el("p_resp").value.trim(),
+      sede:el("p_sede").value, area:el("p_area").value.trim(), fechaInicio:el("p_ini").value,
+      fechaFin:el("p_fin").value, estado:el("p_estado").value };
+    if(editingProy){
+      var pr=proyById(editingProy);
+      if(pr){ for(var k in datos) pr[k]=datos[k]; }
+      toast("Proyecto actualizado");
+    } else {
+      datos.id=uid(); datos.etapas=[];
+      state.proyectos.push(datos);
+      state.proyAbierto=datos.id;                 // se abre para empezar a cargar etapas
+      toast("Proyecto creado · añade sus etapas");
+    }
+    saveProyectos(); renderProyectos(); closeProy();
+  }
+  function delProy(){
+    if(!editingProy) return;
+    var pr=proyById(editingProy);
+    if(!confirm("¿Eliminar el proyecto «"+(pr?pr.nombre:"")+"» con todas sus etapas y evidencias? No se puede deshacer.")) return;
+    state.proyectos=state.proyectos.filter(function(x){ return x.id!==editingProy; });
+    if(state.proyAbierto===editingProy) state.proyAbierto=null;
+    saveProyectos(); renderProyectos(); closeProy(); toast("Proyecto eliminado");
+  }
+
+  function openEtapa(prId, etId){
+    var pr=proyById(prId); if(!pr) return;
+    editingProy=prId; editingEtapa=etId||null;
+    var et=etId?etapaById(pr,etId):null;
+    el("esheetTitle").textContent=et?"Editar etapa":"Nueva etapa";
+    el("e_nombre").value=et?et.nombre:"";
+    el("e_resp").value=et?(et.responsable||""):"";
+    el("e_cump").value=et?(et.fechaCump||""):"";
+    el("e_estado").value=et?(et.estado||"Pendiente"):"Pendiente";
+    el("e_cierre").value=et?(et.fechaCierre||""):"";
+    el("e_notas").value=et?(et.notas||""):"";
+    el("ew_cierre").style.display=(el("e_estado").value==="Completada")?"":"none";
+    el("edelBtn").style.display=et?"":"none";
+    el("ew_nombre").classList.remove("invalid");
+    el("overlay").classList.add("open"); el("esheet").classList.add("open");
+    setTimeout(function(){ el("e_nombre").focus(); },80);
+  }
+  function closeEtapa(){ el("overlay").classList.remove("open"); el("esheet").classList.remove("open"); editingEtapa=null; }
+  function saveEtapaForm(){
+    var pr=proyById(editingProy); if(!pr) return;
+    var nombre=el("e_nombre").value.trim();
+    if(!nombre){ el("ew_nombre").classList.add("invalid"); el("e_nombre").focus(); return; }
+    var estado=el("e_estado").value;
+    var datos={ nombre:nombre, responsable:el("e_resp").value.trim(), fechaCump:el("e_cump").value,
+      estado:estado, fechaCierre: estado==="Completada" ? (el("e_cierre").value||todayISO()) : "",
+      notas:el("e_notas").value.trim() };
+    if(editingEtapa){
+      var et=etapaById(pr,editingEtapa);
+      if(et){ for(var k in datos) et[k]=datos[k]; }
+      toast("Etapa actualizada");
+    } else {
+      datos.id=uid(); datos.evidencias=[];
+      pr.etapas=pr.etapas||[]; pr.etapas.push(datos);
+      toast("Etapa añadida");
+    }
+    saveProyectos(); renderProyectos(); closeEtapa();
+  }
+  function delEtapa(prId, etId){
+    var pr=proyById(prId), et=etapaById(pr,etId); if(!et) return;
+    var n=(et.evidencias||[]).length;
+    if(!confirm("¿Eliminar la etapa «"+et.nombre+"»"+(n?" y sus "+n+" evidencia"+(n===1?"":"s"):"")+"?")) return;
+    pr.etapas=pr.etapas.filter(function(x){ return x.id!==etId; });
+    saveProyectos(); renderProyectos(); toast("Etapa eliminada");
+  }
+  function toggleEtapa(prId, etId){
+    var pr=proyById(prId), et=etapaById(pr,etId); if(!et) return;
+    if(et.estado==="Completada"){ et.estado="Pendiente"; et.fechaCierre=""; }
+    else { et.estado="Completada"; et.fechaCierre=todayISO(); }
+    saveProyectos(); renderProyectos();
+  }
+
+  // ---- evidencias ----
+  // Las fotos se reducen antes de guardarlas: una foto de celular ronda los 4 MB y el
+  // almacenamiento del navegador son unos 5 MB en total. A 1024 px y calidad 0,6 una
+  // evidencia queda en torno a 100 KB y sigue siendo perfectamente legible.
+  function comprimirFoto(file){
+    return new Promise(function(res,rej){
+      var fr=new FileReader();
+      fr.onerror=function(){ rej(new Error("No se pudo leer la imagen")); };
+      fr.onload=function(){
+        var img=new Image();
+        img.onerror=function(){ rej(new Error("El archivo no es una imagen que el navegador pueda abrir")); };
+        img.onload=function(){
+          var MAX=1024, w=img.width, h=img.height;
+          if(w>h && w>MAX){ h=Math.round(h*MAX/w); w=MAX; }
+          else if(h>=w && h>MAX){ w=Math.round(w*MAX/h); h=MAX; }
+          var c=document.createElement("canvas"); c.width=w; c.height=h;
+          var ctx=c.getContext("2d");
+          ctx.fillStyle="#fff"; ctx.fillRect(0,0,w,h);        // fondo para PNG con transparencia
+          ctx.drawImage(img,0,0,w,h);
+          res(c.toDataURL("image/jpeg",0.6));
+        };
+        img.src=fr.result;
+      };
+      fr.readAsDataURL(file);
+    });
+  }
+  var evidenciaDestino=null;
+  function pedirFoto(prId, etId){ evidenciaDestino={pr:prId, et:etId}; el("evFile").value=""; el("evFile").click(); }
+  function agregarFotos(files){
+    var d=evidenciaDestino; if(!d) return;
+    var pr=proyById(d.pr), et=etapaById(pr,d.et); if(!et) return;
+    var lista=Array.prototype.slice.call(files||[]);
+    if(!lista.length) return;
+    toast("Procesando "+lista.length+" imagen"+(lista.length===1?"":"es")+"…");
+    Promise.all(lista.map(function(f){
+      return comprimirFoto(f).then(function(data){
+        return { id:uid(), tipo:"foto", nombre:f.name||"Evidencia", fecha:todayISO(), data:data };
+      });
+    })).then(function(evs){
+      et.evidencias=(et.evidencias||[]).concat(evs);
+      saveProyectos(); renderProyectos();
+      toast(evs.length+" evidencia"+(evs.length===1?"":"s")+" añadida"+(evs.length===1?"":"s"));
+    }).catch(function(err){ alert("No se pudo añadir la evidencia: "+(err&&err.message||err)); });
+  }
+  function agregarNota(prId, etId){
+    var pr=proyById(prId), et=etapaById(pr,etId); if(!et) return;
+    var t=prompt("Escribe la evidencia o la observación:");
+    if(t===null) return;
+    t=t.trim(); if(!t) return;
+    et.evidencias=(et.evidencias||[]).concat([{ id:uid(), tipo:"nota", nombre:"Nota", fecha:todayISO(), texto:t }]);
+    saveProyectos(); renderProyectos(); toast("Nota añadida");
+  }
+  function borrarEvidencia(prId, etId, evId){
+    var pr=proyById(prId), et=etapaById(pr,etId); if(!et) return;
+    if(!confirm("¿Eliminar esta evidencia?")) return;
+    et.evidencias=(et.evidencias||[]).filter(function(x){ return x.id!==evId; });
+    saveProyectos(); renderProyectos(); toast("Evidencia eliminada");
+  }
+
   // ---- formulario ----
   var editingAcc=null;
   function updateDeadlinePreview(){
@@ -2066,23 +2624,26 @@
 
     var items=mergeById(state.items, remote&&remote.actividades, tombs);
     var accs =mergeById(state.accidentes, remote&&remote.accidentes, tombs);
+    var proys=mergeById(state.proyectos, remote&&remote.proyectos, tombs);
     var fex=(ferExtra||[]).slice();
     ((remote&&remote.feriadosExtra)||[]).forEach(function(d){ if(fex.indexOf(d)<0) fex.push(d); });
 
     var changed = JSON.stringify(items)!==JSON.stringify(state.items)
                || JSON.stringify(accs)!==JSON.stringify(state.accidentes)
+               || JSON.stringify(proys)!==JSON.stringify(state.proyectos)
                || JSON.stringify(fex)!==JSON.stringify(ferExtra);
-    state.items=items; state.accidentes=accs; state.tombs=tombs;
+    state.items=items; state.accidentes=accs; state.proyectos=proys; state.tombs=tombs;
     if(fex.length!==ferExtra.length){ ferExtra=fex; saveFeriadosExtra(); updateSetFeriadosSub(); }
 
     // reflejar en disco sin volver a marcar todo como modificado
-    primeSnapshot(state.items, snapItems); primeSnapshot(state.accidentes, snapAcc); saveTombs();
+    primeSnapshot(state.items, snapItems); primeSnapshot(state.accidentes, snapAcc); primeSnapshot(state.proyectos, snapProy); saveTombs();
     try{ localStorage.setItem(STORE_KEY, JSON.stringify(state.items)); }catch(e){}
     try{ localStorage.setItem(ACC_KEY, JSON.stringify(state.accidentes)); }catch(e){}
+    try{ localStorage.setItem(PROY_KEY, JSON.stringify(state.proyectos)); }catch(e){}
     return changed;
   }
   function localDoc(){
-    return { v:3, actividades:state.items, accidentes:state.accidentes,
+    return { v:4, actividades:state.items, accidentes:state.accidentes, proyectos:state.proyectos,
              tombs:state.tombs, feriadosExtra:ferExtra, savedAt:Date.now() };
   }
 
@@ -2353,6 +2914,37 @@
       b.addEventListener("click",function(){ setTab(b.getAttribute("data-tab")); closeNav(); });
     });
     el("hamb").addEventListener("click",toggleNav);
+
+    // ---- proyectos ----
+    el("proyNewBtn").addEventListener("click",function(){ openProy(null); });
+    el("proyFEstado").addEventListener("change",function(){ state.proyFEstado=this.value; renderProyectos(); });
+    el("pcloseSheet").addEventListener("click",closeProy);
+    el("psaveBtn").addEventListener("click",saveProyForm);
+    el("pdelBtn").addEventListener("click",delProy);
+    el("ecloseSheet").addEventListener("click",closeEtapa);
+    el("esaveBtn").addEventListener("click",saveEtapaForm);
+    el("edelBtn").addEventListener("click",function(){ if(editingEtapa){ var pid=editingProy, eid=editingEtapa; closeEtapa(); delEtapa(pid,eid); } });
+    el("e_estado").addEventListener("change",function(){
+      el("ew_cierre").style.display=(this.value==="Completada")?"":"none";
+      if(this.value==="Completada" && !el("e_cierre").value) el("e_cierre").value=todayISO();
+    });
+    el("pdVolver").addEventListener("click",function(){ state.proyAbierto=null; renderProyectos(); });
+    el("pdEditar").addEventListener("click",function(){ var pr=proyById(state.proyAbierto); if(pr) openProy(pr); });
+    el("pdNuevaEtapa").addEventListener("click",function(){ if(state.proyAbierto) openEtapa(state.proyAbierto,null); });
+    el("evFile").addEventListener("change",function(){ agregarFotos(this.files); this.value=""; });
+
+    el("s-proyectos").addEventListener("click",function(e){
+      var t;
+      if((t=e.target.closest("[data-proyopen]"))){ state.proyAbierto=t.getAttribute("data-proyopen"); renderProyectos(); window.scrollTo({top:0,behavior:"smooth"}); return; }
+      if((t=e.target.closest("[data-ettoggle]"))){ var p1=t.getAttribute("data-ettoggle").split("|"); toggleEtapa(p1[0],p1[1]); return; }
+      if((t=e.target.closest("[data-etfoto]"))){ var p2=t.getAttribute("data-etfoto").split("|"); pedirFoto(p2[0],p2[1]); return; }
+      if((t=e.target.closest("[data-etnota]"))){ var p3=t.getAttribute("data-etnota").split("|"); agregarNota(p3[0],p3[1]); return; }
+      if((t=e.target.closest("[data-etedit]"))){ var p4=t.getAttribute("data-etedit").split("|"); openEtapa(p4[0],p4[1]); return; }
+      if((t=e.target.closest("[data-etdel]"))){ var p5=t.getAttribute("data-etdel").split("|"); delEtapa(p5[0],p5[1]); return; }
+      if((t=e.target.closest("[data-evdel]"))){ var p6=t.getAttribute("data-evdel").split("|"); borrarEvidencia(p6[0],p6[1],p6[2]); return; }
+      if((t=e.target.closest("[data-proyid]"))){ state.proyAbierto=t.getAttribute("data-proyid"); renderProyectos(); return; }
+    });
+
     el("sbClose").addEventListener("click",closeNav);
     el("navScrim").addEventListener("click",closeNav);
     window.addEventListener("resize",function(){ if(!navIsDrawer()) closeNav(); });
@@ -2466,7 +3058,8 @@
     bindAccSwipe();
   }
 
-  initSelects(); loadFeriadosExtra(); loadTombs(); load(); loadAcc(); loadSyncCfg();
+  initSelects(); loadFeriadosExtra(); loadTombs(); load(); loadAcc(); loadProyectos(); loadSyncCfg();
+  llenarSelectsProyecto();
   bind(); updateSetFeriadosSub(); render(); setTab("planner");
   renderSyncUI(); startSyncLoop(); if(syncOn()) syncNow(true);
 
