@@ -438,7 +438,11 @@
   .etapa.hecha { border-left-color: var(--st-plan); opacity: .82; }
   .etapa.venc { border-left-color: var(--st-late); background: linear-gradient(160deg, rgba(251,110,133,.14), rgba(251,110,133,.04)); }
   .et-top { display: flex; align-items: flex-start; gap: 12px; }
-  .et-chk { width: 26px; height: 26px; border-radius: 8px; border: 1.5px solid var(--border-2); background: transparent; color: transparent; display: grid; place-items: center; flex: 0 0 auto; margin-top: 1px; }
+  .et-chk { width: 26px; height: 26px; border-radius: 8px; border: 1.5px solid var(--border-2); background: transparent; color: transparent; display: grid; place-items: center; flex: 0 0 auto; margin-top: 1px; position: relative; }
+  /* El dibujo mide 26 px, pero el área que responde al dedo llega a 44, que es el mínimo
+     cómodo en pantalla táctil. */
+  .et-chk::before { content: ""; position: absolute; top: -9px; left: -9px; right: -9px; bottom: -9px; }
+  .et-chk:hover { border-color: var(--st-plan); }
   .et-chk svg { width: 15px; height: 15px; }
   .et-chk.on { background: var(--st-plan); border-color: var(--st-plan); color: #04231a; }
   .et-tx { flex: 1; min-width: 0; }
@@ -1559,6 +1563,15 @@
 
   // ---------- render dispatch ----------
 
+
+  function actualizarFab(){
+    var f=el("fab"); if(!f) return;
+    var etiqueta = state.tab!=="proyectos" ? "Nueva actividad"
+                 : state.proyAbierto ? "Añadir etapa al proyecto" : "Nuevo proyecto";
+    f.setAttribute("aria-label", etiqueta);
+    f.setAttribute("title", etiqueta);
+  }
+
   function llenarSelectsProyecto(){
     var op=function(v){ return '<option>'+esc(v)+'</option>'; };
     el("p_estado").innerHTML = PROY_ESTADOS.map(op).join("");
@@ -1574,7 +1587,8 @@
     state.tab=t;
     ["planner","completadas","accidentes","proyectos","board","analisis","ajustes"].forEach(function(x){ el("s-"+x).hidden=(x!==t); });
     Array.prototype.forEach.call(document.querySelectorAll(".navbtn, .snav"),function(b){ b.classList.toggle("active", b.getAttribute("data-tab")===t); });
-    el("fab").hidden=!(t==="planner"||t==="board");
+    el("fab").hidden=!(t==="planner"||t==="board"||t==="proyectos");
+    actualizarFab();
     window.scrollTo({top:0,behavior:"smooth"});
   }
 
@@ -2205,6 +2219,7 @@
     if(state.proyAbierto && !proyById(state.proyAbierto)) state.proyAbierto=null;
     el("proyLista").hidden = !!state.proyAbierto;
     el("proyDetalle").hidden = !state.proyAbierto;
+    actualizarFab();
     if(state.proyAbierto){ renderProyDetalle(); return; }
 
     var rows=proyFiltrados();
@@ -2282,7 +2297,10 @@
       return (a.fechaCump||"9999-12-31").localeCompare(b.fechaCump||"9999-12-31");
     });
     el("pdEtapas").innerHTML = et.length ? et.map(function(e){ return etapaHTML(pr,e); }).join("")
-      : '<div class="empty small"><h3>Sin etapas</h3><div>Añade los pasos del proyecto con su fecha de cumplimiento.</div></div>';
+      : '<div class="empty small"><h3>Todavía sin etapas</h3>'+
+        '<div>Divide el proyecto en pasos. Cada etapa lleva su fecha de cumplimiento y sus evidencias, '+
+        'y el avance sube conforme las marcas como cumplidas.</div>'+
+        '<button class="btn primary" id="pdPrimeraEtapa" style="margin-top:16px">+ Añadir la primera etapa</button></div>';
   }
 
 
@@ -2378,9 +2396,16 @@
   }
   function toggleEtapa(prId, etId){
     var pr=proyById(prId), et=etapaById(pr,etId); if(!et) return;
-    if(et.estado==="Completada"){ et.estado="Pendiente"; et.fechaCierre=""; }
-    else { et.estado="Completada"; et.fechaCierre=todayISO(); }
+    var completa;
+    if(et.estado==="Completada"){ et.estado="Pendiente"; et.fechaCierre=""; completa=false; }
+    else {
+      et.estado="Completada"; et.fechaCierre=todayISO(); completa=true;
+      var tarde = et.fechaCump && et.fechaCierre > et.fechaCump;
+      var m=proyMetricas(pr);
+      toast("Etapa cumplida"+(tarde?" (fuera de plazo)":"")+" · avance "+m.avance+"%");
+    }
     saveProyectos(); renderProyectos();
+    if(!completa){ var m2=proyMetricas(pr); toast("Etapa reabierta · avance "+m2.avance+"%"); }
   }
 
   // ---- evidencias ----
@@ -2935,6 +2960,7 @@
 
     el("s-proyectos").addEventListener("click",function(e){
       var t;
+      if(e.target.closest("#pdPrimeraEtapa")){ if(state.proyAbierto) openEtapa(state.proyAbierto,null); return; }
       if((t=e.target.closest("[data-proyopen]"))){ state.proyAbierto=t.getAttribute("data-proyopen"); renderProyectos(); window.scrollTo({top:0,behavior:"smooth"}); return; }
       if((t=e.target.closest("[data-ettoggle]"))){ var p1=t.getAttribute("data-ettoggle").split("|"); toggleEtapa(p1[0],p1[1]); return; }
       if((t=e.target.closest("[data-etfoto]"))){ var p2=t.getAttribute("data-etfoto").split("|"); pedirFoto(p2[0],p2[1]); return; }
@@ -2948,7 +2974,11 @@
     el("sbClose").addEventListener("click",closeNav);
     el("navScrim").addEventListener("click",closeNav);
     window.addEventListener("resize",function(){ if(!navIsDrawer()) closeNav(); });
-    el("fab").addEventListener("click",function(){ openSheet(null); });
+    el("fab").addEventListener("click",function(){
+      if(state.tab==="proyectos"){
+        if(state.proyAbierto) openEtapa(state.proyAbierto,null); else openProy(null);
+      } else openSheet(null);
+    });
     el("closeSheet").addEventListener("click",closeSheet);
     el("overlay").addEventListener("click",function(){ closeSheet(); closeAcc(); closeSyncSheet(); });
 
