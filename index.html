@@ -562,7 +562,7 @@
     background: linear-gradient(150deg, rgba(255,255,255,.30), rgba(255,255,255,0) 55%);
     pointer-events: none;
   }
-  .sb-logo svg { width: 26px; height: 26px; color: #052030; position: relative; z-index: 1; }
+  .sb-logo svg { width: 26px; height: 26px; position: relative; z-index: 1; }
   .sb-name { font-family: var(--mono); font-size: 15px; font-weight: 800; letter-spacing: .06em; color: var(--ink); }
   .sb-sub { font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; color: var(--cyan); margin-top: 2px; }
   .sb-nav { display: flex; flex-direction: column; gap: 5px; flex: 1; }
@@ -678,12 +678,12 @@
   <aside class="sidebar" id="sidebar">
     <div class="sb-brand">
       <div class="sb-logo" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 5A7.6 7.6 0 0 0 4.4 12.6v2.75h15.2V12.6A7.6 7.6 0 0 0 12 5z"/>
-          <rect x="2.1" y="16.05" width="19.8" height="2.95" rx="1.47"/>
+        <svg viewBox="0 0 24 24" fill="none" stroke="#0A1830" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="3" width="16" height="18" rx="3" fill="rgba(255,255,255,.92)" />
+          <path d="M8.5 8.5h7M8.5 12h7M8.5 15.5h4"/>
         </svg>
       </div>
-      <div><div class="sb-name">PLANIFICADOR</div><div class="sb-sub">SST · CORE_v1</div></div>
+      <div><div class="sb-name">PLANIFICADOR</div><div class="sb-sub">SST</div></div>
       <button class="sb-close" id="sbClose" aria-label="Cerrar menú"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
     <nav class="sb-nav">
