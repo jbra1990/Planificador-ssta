@@ -1021,6 +1021,14 @@
   function el(id){ return document.getElementById(id); }
   function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
   function uid(){ return "a"+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+  // Identificador de la fila en la nube: es lo único que separa tus datos de los de
+  // cualquier otro, así que se genera con aleatoriedad criptográfica, no con Math.random.
+  function nuevoSyncId(){
+    var a=new Uint8Array(16), s="", i;
+    crypto.getRandomValues(a);
+    for(i=0;i<a.length;i++) s+=("0"+a[i].toString(16)).slice(-2);
+    return "s"+s;
+  }
   function todayISO(){ return new Date().toISOString().slice(0,10); }
   function shiftDays(n){ var d=new Date(); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
   function fmtD(iso){ if(!iso) return "—"; var p=iso.split("-"); return p.length===3 ? p[2]+"/"+p[1]+"/"+p[0].slice(2) : iso; }
@@ -1450,13 +1458,20 @@
       navDownload(name,content,type); if(okMsg) toast(okMsg);
     });
   }
+  // Excel y Sheets interpretan como fórmula toda celda que empieza con = + - @, así que
+  // un texto copiado de un reporte podría ejecutarse al abrir el CSV. Se neutraliza.
+  function csvQ(v){
+    v=String(v==null?"":v);
+    if(/^[=+\-@\t\r]/.test(v)) v="'"+v;
+    return '"'+v.replace(/"/g,'""')+'"';
+  }
   function stamp(){ var d=new Date(); return d.getFullYear()+("0"+(d.getMonth()+1)).slice(-2)+("0"+d.getDate()).slice(-2); }
   function backupPayload(){ return { _sst:2, actividades:state.items, accidentes:state.accidentes, feriadosExtra:ferExtra }; }
   function exportJSON(){ download("tablero-seguridad-"+stamp()+".json", JSON.stringify(backupPayload(),null,2), "application/json", "Respaldo JSON exportado"); }
   function exportCSV(){
     var cols=["actividad","tipo","estatus","prioridad","responsable","fecha","cierre","cumplimiento","involucrados","notas"];
     var head=["Actividad","Tipo","Estatus","Prioridad","Responsable","Fecha registro","Cierre tentativo","Fecha cumplimiento","Otros involucrados","Avance/notas","Subactividades"];
-    var q=function(v){ v=String(v==null?"":v); return '"'+v.replace(/"/g,'""')+'"'; };
+    var q=csvQ;
     var subTxt=function(it){ if(!it.subtareas||!it.subtareas.length) return ""; var dn=it.subtareas.filter(function(s){return s.done;}).length; return dn+"/"+it.subtareas.length+": "+it.subtareas.map(function(s){return (s.done?"[x] ":"[ ] ")+s.t;}).join(" | "); };
     var lines=[head.map(q).join(",")];
     state.items.forEach(function(it){ var row=cols.map(function(c){ return q(c==="estatus"?effStatus(it):it[c]); }); row.push(q(subTxt(it))); lines.push(row.join(",")); });
@@ -1921,7 +1936,7 @@
   function exportAccCSV(){
     if(!state.accidentes.length){ alert("Aún no hay eventos registrados."); return; }
     var head=["Nombres y apellidos","Puesto de trabajo","Clasificación","Localidad","Área","Fecha del evento","Hora","Fecha máxima de reporte","Días hábiles restantes","Estado","Fecha de reporte","Descripción"];
-    var q=function(v){ v=String(v==null?"":v); return '"'+v.replace(/"/g,'""')+'"'; };
+    var q=csvQ;
     var lines=[head.map(q).join(",")];
     accFiltrados().forEach(function(a){
       var info=accConPlazo(a);
@@ -2038,19 +2053,47 @@
     return h;
   }
   function sbUrl(path){ return String(sync.cfg.url).replace(/\/+$/,"")+path; }
-  function syncPull(){
+
+  // Se prefiere la función RPC, que sólo entrega o escribe la fila cuyo identificador ya se
+  // conoce. Con acceso directo a la tabla, cualquiera que consiguiera la clave pública
+  // podría listar todas las filas y, con el identificador a la vista, sobrescribirlas.
+  // Si la base todavía no tiene las funciones (HTTP 404) se usa la tabla, para que la app
+  // siga funcionando mientras no se corra el SQL nuevo.
+  var rpcOk=null;
+  function pullTabla(){
     return fetch(sbUrl("/rest/v1/planificador?select=payload&id=eq."+encodeURIComponent(sync.cfg.id)), { headers:sbHeaders() })
       .then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); })
       .then(function(rows){ return (rows&&rows[0]&&rows[0].payload) ? syncDecrypt(rows[0].payload) : null; });
   }
+  function pushTabla(payload){
+    return fetch(sbUrl("/rest/v1/planificador"), {
+      method:"POST",
+      headers:sbHeaders({ "Prefer":"resolution=merge-duplicates,return=minimal" }),
+      body:JSON.stringify([{ id:sync.cfg.id, payload:payload, updated_at:new Date().toISOString() }])
+    }).then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error("HTTP "+r.status+" "+t.slice(0,120)); }); });
+  }
+  function syncPull(){
+    if(rpcOk===false) return pullTabla();
+    return fetch(sbUrl("/rest/v1/rpc/planificador_leer"), {
+      method:"POST", headers:sbHeaders(), body:JSON.stringify({ p_id:sync.cfg.id })
+    }).then(function(r){
+      if(r.status===404){ rpcOk=false; return pullTabla(); }
+      if(!r.ok) throw new Error("HTTP "+r.status);
+      rpcOk=true;
+      return r.json().then(function(p){ return p ? syncDecrypt(p) : null; });
+    });
+  }
   function syncPush(){
     return syncEncrypt(localDoc()).then(function(payload){
-      return fetch(sbUrl("/rest/v1/planificador"), {
-        method:"POST",
-        headers:sbHeaders({ "Prefer":"resolution=merge-duplicates,return=minimal" }),
-        body:JSON.stringify([{ id:sync.cfg.id, payload:payload, updated_at:new Date().toISOString() }])
+      if(rpcOk===false) return pushTabla(payload);
+      return fetch(sbUrl("/rest/v1/rpc/planificador_guardar"), {
+        method:"POST", headers:sbHeaders(), body:JSON.stringify({ p_id:sync.cfg.id, p_payload:payload })
+      }).then(function(r){
+        if(r.status===404){ rpcOk=false; return pushTabla(payload); }
+        if(!r.ok) return r.text().then(function(t){ throw new Error("HTTP "+r.status+" "+t.slice(0,120)); });
+        rpcOk=true;
       });
-    }).then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error("HTTP "+r.status+" "+t.slice(0,120)); }); });
+    });
   }
 
   function syncNow(silent){
@@ -2193,7 +2236,7 @@
     if(!pass || pass.length<8){ alert("La contraseña de cifrado debe tener al menos 8 caracteres.\n\n⚠️ Debe ser la MISMA en todos tus dispositivos y no se puede recuperar si la olvidas."); return; }
     var prev=sync.cfg||{};
     sync.cfg={ url:url, key:key, pass:pass,
-               id: prev.id || (uid()+uid()+uid()),
+               id: prev.id || nuevoSyncId(),
                salt: prev.salt || b64(crypto.getRandomValues(new Uint8Array(16))) };
     sync.key=null;                       // re-derivar con la nueva contraseña/salt
     saveSyncCfg(); closeSyncSheet(); startSyncLoop(); renderSyncUI();

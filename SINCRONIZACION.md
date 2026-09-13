@@ -27,12 +27,39 @@ create table if not exists public.planificador (
 
 alter table public.planificador enable row level security;
 
-create policy "lectura"     on public.planificador for select using (true);
-create policy "inserción"   on public.planificador for insert with check (true);
-create policy "actualización" on public.planificador for update using (true) with check (true);
+-- Nadie entra por la tabla: el acceso es sólo a través de las dos funciones de abajo,
+-- que exigen conocer el identificador de la fila. Sin él no se puede leer, ni listar,
+-- ni sobrescribir nada.
+revoke all on public.planificador from anon, authenticated;
+
+drop policy if exists "lectura"       on public.planificador;
+drop policy if exists "inserción"     on public.planificador;
+drop policy if exists "actualización" on public.planificador;
+
+create or replace function public.planificador_leer(p_id text)
+returns text language sql security definer set search_path = public as $$
+  select payload from public.planificador where id = p_id;
+$$;
+
+create or replace function public.planificador_guardar(p_id text, p_payload text)
+returns void language sql security definer set search_path = public as $$
+  insert into public.planificador (id, payload, updated_at)
+  values (p_id, p_payload, now())
+  on conflict (id) do update
+    set payload = excluded.payload, updated_at = now();
+$$;
+
+revoke all on function public.planificador_leer(text)            from public;
+revoke all on function public.planificador_guardar(text, text)   from public;
+grant execute on function public.planificador_leer(text)          to anon;
+grant execute on function public.planificador_guardar(text, text) to anon;
 ```
 
 Debe responder *Success*.
+
+> Si ya habías creado la tabla con la versión anterior de esta guía, corre este mismo
+> bloque otra vez: reemplaza las políticas antiguas, que permitían a cualquiera con la
+> clave pública listar todas las filas y sobrescribirlas.
 
 ## 3. Copiar las dos claves
 
