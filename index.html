@@ -85,7 +85,7 @@
   /* Vidrio esmerilado en todas las superficies. -webkit- es necesario para Safari/iOS. */
   .kpi, .panel, .mini, .set-group, .chip, .search, .pcol, .col, .pcard, .kcard,
   .acard, .acc-card, .proy-card, .etapa, .deadline-box, .topbar, .sidebar, .sheet, .toast, .bell,
-  .sync-pill, .sb-user, .set-row .si, .alert {
+  .sync-pill, .set-row .si, .alert {
     backdrop-filter: var(--blur);
     -webkit-backdrop-filter: var(--blur);
   }
@@ -551,7 +551,18 @@
     .fab { bottom: 24px; }
   }
   .sb-brand { display: flex; align-items: center; gap: 12px; padding: 4px 8px 20px; }
-  .sb-logo { width: 40px; height: 40px; border-radius: 11px; background: var(--grad); box-shadow: var(--glow); flex: 0 0 auto; }
+  .sb-logo {
+    width: 44px; height: 44px; border-radius: 13px; flex: 0 0 auto;
+    background: var(--grad); display: grid; place-items: center; position: relative; overflow: hidden;
+    box-shadow: 0 0 22px rgba(53,224,240,.34), inset 0 1px 0 rgba(255,255,255,.45), 0 4px 12px rgba(6,12,28,.45);
+  }
+  /* Brillo diagonal: le da volumen sin recargar. */
+  .sb-logo::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(150deg, rgba(255,255,255,.30), rgba(255,255,255,0) 55%);
+    pointer-events: none;
+  }
+  .sb-logo svg { width: 26px; height: 26px; color: #052030; position: relative; z-index: 1; }
   .sb-name { font-family: var(--mono); font-size: 15px; font-weight: 800; letter-spacing: .06em; color: var(--ink); }
   .sb-sub { font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; color: var(--cyan); margin-top: 2px; }
   .sb-nav { display: flex; flex-direction: column; gap: 5px; flex: 1; }
@@ -565,12 +576,8 @@
   .snav.active::before { content: ""; position: absolute; left: 0; top: 9px; bottom: 9px; width: 3px; border-radius: 0 3px 3px 0; background: var(--grad); box-shadow: var(--glow); }
   .snav.active svg { filter: drop-shadow(0 0 6px rgba(53,224,240,.6)); }
   .sb-foot { border-top: 1px solid var(--border); padding-top: 14px; margin-top: 8px; }
-  .sb-status { font-family: var(--mono); font-size: 10px; letter-spacing: .1em; color: var(--muted); display: flex; align-items: center; gap: 7px; padding: 0 8px 12px; }
+  .sb-status { font-family: var(--mono); font-size: 10px; letter-spacing: .1em; color: var(--muted); display: flex; align-items: center; gap: 7px; padding: 0 8px; line-height: 1.4; }
   .sb-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--st-plan); box-shadow: 0 0 10px var(--st-plan); }
-  .sb-user { display: flex; align-items: center; gap: 11px; padding: 8px; border-radius: 12px; background: var(--card); border: 1px solid var(--border); }
-  .sb-ava { width: 36px; height: 36px; border-radius: 50%; background: var(--grad); display: grid; place-items: center; font-size: 16px; flex: 0 0 auto; }
-  .sb-uname { font-size: 12.5px; font-weight: 750; color: var(--ink); }
-  .sb-urole { font-size: 10.5px; color: var(--muted); margin-top: 1px; }
 
   /* ---------- Bottom nav ---------- */
   .bottomnav { display: none; }
@@ -670,7 +677,12 @@
 <div class="app">
   <aside class="sidebar" id="sidebar">
     <div class="sb-brand">
-      <div class="sb-logo"></div>
+      <div class="sb-logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 5A7.6 7.6 0 0 0 4.4 12.6v2.75h15.2V12.6A7.6 7.6 0 0 0 12 5z"/>
+          <rect x="2.1" y="16.05" width="19.8" height="2.95" rx="1.47"/>
+        </svg>
+      </div>
       <div><div class="sb-name">PLANIFICADOR</div><div class="sb-sub">SST · CORE_v1</div></div>
       <button class="sb-close" id="sbClose" aria-label="Cerrar menú"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
@@ -692,10 +704,6 @@
     </nav>
     <div class="sb-foot">
       <div class="sb-status"><span class="sb-dot" id="sbDot"></span> <span id="sbStatusTx">SISTEMA LOCAL · ACTIVO</span></div>
-      <div class="sb-user">
-        <div class="sb-ava">🦺</div>
-        <div><div class="sb-uname">OPERADOR SST</div><div class="sb-urole">Coordinación de Seguridad</div></div>
-      </div>
     </div>
   </aside>
 
