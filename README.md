@@ -30,7 +30,9 @@ Pages — ver más abajo)*
 - Orden por proximidad de vencimiento y **alerta cuando faltan 3 días hábiles o menos**.
 
 **Proyectos**
-- Proyectos con etapas, responsable, presupuesto y evidencias (fotos y notas por etapa).
+- Proyectos con etapas, responsable, presupuesto y evidencias (fotos, PDF y notas por etapa).
+  Los PDF (por ejemplo proformas de proveedores) se abren en un visor integrado con solo
+  tocarlos, sin salir de la app.
 - Avance (etapas completadas) y cumplimiento (etapas cerradas dentro de plazo) se miden por
   separado, porque un proyecto puede llegar al 100 % de avance habiendo incumplido todas
   las fechas.
