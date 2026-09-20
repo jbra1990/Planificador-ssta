@@ -441,6 +441,37 @@
   .proy-prox { font-size: 12.5px; color: var(--muted); }
   .proy-prox b { color: var(--ink-2); }
   .proy-foot .acc-btn { margin-left: auto; }
+  .proy-budget { font-family: var(--mono); font-size: 12px; color: var(--ink-2); font-weight: 700; }
+
+  /* Semáforo RAG: el color que resume si el proyecto necesita atención, más allá del
+     avance en sí — un proyecto puede ir bien en % y aun así tener una etapa vencida. */
+  .rag-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex: 0 0 auto; }
+  .rag-dot.rag-rojo  { background: var(--st-late); box-shadow: 0 0 8px rgba(251,110,133,.65); }
+  .rag-dot.rag-ambar { background: var(--st-proc); box-shadow: 0 0 8px rgba(251,191,36,.55); }
+  .rag-dot.rag-verde { background: var(--st-plan); box-shadow: 0 0 8px rgba(52,211,153,.55); }
+
+  /* Cabecera de cada grupo cuando la vista está agrupada por área. */
+  .proy-titlebar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin: 6px 2px 15px; }
+  .proy-titlebar .screen-title { margin: 0; }
+  .proy-area-h { display: flex; align-items: center; gap: 10px; padding: 8px 4px; margin: 18px 0 11px; border-bottom: 1px solid var(--border); }
+  .proy-area-h:first-child { margin-top: 0; }
+  .proy-area-t { font-family: var(--mono); font-weight: 750; font-size: 13px; letter-spacing: .05em; text-transform: uppercase; color: var(--ink); }
+  .proy-area-n { color: var(--muted); font-size: 12px; }
+  .proy-area-avance { margin-left: auto; font-weight: 700; font-size: 13px; color: var(--ink-2); }
+
+  /* Panel de resumen: próximos vencimientos + presupuesto del programa, encima de la lista. */
+  .proy-resumen { padding: 15px 16px; margin-bottom: 15px; }
+  .proy-resumen-h { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap;
+    font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 10px; }
+  .proy-resumen-budget { font-family: var(--sans); font-size: 13px; font-weight: 700; color: var(--ink-2); text-transform: none; letter-spacing: 0; }
+  .proy-resumen-budget b { color: var(--ink); }
+  .hito-row { display: flex; align-items: center; gap: 12px; padding: 9px 0; }
+  .hito-row + .hito-row { border-top: 1px solid var(--border); }
+  .hito-tx { flex: 1; min-width: 0; }
+  .hito-et { font-size: 13px; font-weight: 650; }
+  .hito-pr { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+  .hito-fecha { font-family: var(--mono); font-size: 12px; color: var(--ink-2); white-space: nowrap; }
+  .proy-vacio-hitos { font-size: 13px; color: var(--muted); padding: 4px 0; }
 
   /* detalle */
   .volver { background: none; border: none; color: var(--cyan); font-weight: 700; font-size: 14px; padding: 4px 0 12px; }
@@ -787,12 +818,30 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" width="17" height="17"><path d="M12 5v14M5 12h14"/></svg>
             Nuevo proyecto
           </button>
+          <div class="chip"><select id="proyFArea" aria-label="Área">
+            <option value="">Todas las áreas</option>
+          </select></div>
+          <div class="chip"><select id="proyFPrioridad" aria-label="Prioridad">
+            <option value="">Toda prioridad</option>
+          </select></div>
           <div class="chip"><select id="proyFEstado" aria-label="Estado del proyecto">
             <option value="">Todos los estados</option>
           </select></div>
         </div>
-        <h2 class="screen-title">Proyectos <span class="dim" id="proyCount"></span></h2>
-        <div class="proy-grid" id="proyCards"></div>
+
+        <div class="panel proy-resumen" id="proyResumen">
+          <div class="proy-resumen-h">
+            <span>Próximos vencimientos</span>
+            <span class="proy-resumen-budget" id="proyResumenBudget"></span>
+          </div>
+          <div id="proyHitosList"></div>
+        </div>
+
+        <div class="proy-titlebar">
+          <h2 class="screen-title">Proyectos <span class="dim" id="proyCount"></span></h2>
+          <button class="mini-btn" id="proyToggleAgrupar">Agrupar por área</button>
+        </div>
+        <div id="proyCards"></div>
       </div>
 
       <div id="proyDetalle" hidden>
@@ -804,6 +853,7 @@
           </div>
           <div class="proy-meta" id="pdMeta"></div>
           <p class="pd-desc" id="pdDesc" hidden></p>
+          <p class="pd-desc" id="pdPresupuestoNota" hidden></p>
           <div class="acc-dates" id="pdFechas"></div>
           <div class="proy-barras" id="pdBarras"></div>
         </div>
@@ -942,6 +992,19 @@
         <button class="set-row" id="setAccCSV" style="width:100%;text-align:left">
           <span class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M4 10h16M10 4v16"/></svg></span>
           <span class="st"><span class="t">Exportar accidentes (CSV)</span><span class="d">Descarga el registro de accidentes</span></span>
+          <span class="chev">›</span>
+        </button>
+      </div>
+      <div class="set-group">
+        <h4>Proyectos</h4>
+        <button class="set-row" id="setSeedLV" style="width:100%;text-align:left">
+          <span class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v10"/><path d="M8 7l4-4 4 4"/><rect x="3" y="13" width="18" height="8" rx="2"/></svg></span>
+          <span class="st"><span class="t">Cargar programa Líneas de vida</span><span class="d">Añade los 16 puntos del levantamiento como proyectos, con etapas y fechas por definir</span></span>
+          <span class="chev">›</span>
+        </button>
+        <button class="set-row" id="setProyCSV" style="width:100%;text-align:left">
+          <span class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M4 10h16M10 4v16"/></svg></span>
+          <span class="st"><span class="t">Exportar proyectos (CSV)</span><span class="d">Avance, cumplimiento y presupuesto de cada proyecto</span></span>
           <span class="chev">›</span>
         </button>
       </div>
@@ -1120,7 +1183,22 @@
       </div>
       <div class="hint">Inicio y fin previsto del proyecto completo.</div>
     </div>
-    <div class="field"><label for="p_estado">Estado</label><select id="p_estado"></select></div>
+    <div class="field">
+      <label for="p_pri">Prioridad</label>
+      <div class="frow">
+        <select id="p_pri"></select>
+        <select id="p_estado"></select>
+      </div>
+    </div>
+    <div class="field"><label for="p_programa">Programa</label>
+      <input type="text" id="p_programa" placeholder="Ej. Líneas de vida 2026" list="programasList" />
+      <div class="hint">Agrupa proyectos relacionados para verlos y reportarlos juntos.</div>
+    </div>
+    <div class="field"><label for="p_presupuesto">Presupuesto estimado (USD)</label>
+      <input type="number" id="p_presupuesto" placeholder="Ej. 12000" min="0" step="0.01" />
+    </div>
+    <div class="field"><label for="p_presupuestoNota">Nota de presupuesto</label>
+      <textarea id="p_presupuestoNota" placeholder="Cotizaciones consideradas, proveedor elegido, alcance…"></textarea></div>
   </div>
   <div class="sheet-f">
     <button class="btn del" id="pdelBtn" style="display:none">Eliminar</button>
@@ -1161,6 +1239,7 @@
 </aside>
 
 <input type="file" id="evFile" accept="image/*" multiple hidden />
+<datalist id="programasList"></datalist>
 
 <!-- Sheet: accidentes -->
 <aside class="sheet" id="asheet" role="dialog" aria-modal="true" aria-labelledby="asheetTitle">
@@ -1251,7 +1330,8 @@
   var PRI_META = { "Alta":{lab:"ALTA",col:"#FB6E85"}, "Media":{lab:"MEDIA",col:"#FBBF24"}, "Baja":{lab:"BAJA",col:"#94A3B8"} };
 
   var state = { items: [], accidentes: [], proyectos: [], tombs: {}, tab: "planner", search: "", fTipo: "", fEstatus: "", fPrioridad: "",
-                accFTipo: "", accFSede: "", accFEstado: "", proyAbierto: null, proyFEstado: "" };
+                accFTipo: "", accFSede: "", accFEstado: "", proyAbierto: null, proyFEstado: "", proyFArea: "", proyFPrioridad: "",
+                proyAgrupado: false };
   var editingId = null;
 
   function el(id){ return document.getElementById(id); }
@@ -1655,6 +1735,14 @@
     el("p_estado").innerHTML = PROY_ESTADOS.map(op).join("");
     el("e_estado").innerHTML = ETAPA_ESTADOS.map(op).join("");
     el("proyFEstado").innerHTML = '<option value="">Todos los estados</option>' + PROY_ESTADOS.map(op).join("");
+    el("p_pri").innerHTML = PROY_PRIORIDADES.map(op).join("");
+    el("proyFPrioridad").innerHTML = '<option value="">Toda prioridad</option>' + PROY_PRIORIDADES.map(op).join("");
+  }
+  // Programas ya usados en otros proyectos, para autocompletar el campo al escribir.
+  function actualizarListaProgramas(){
+    var vistos={}, out=[];
+    state.proyectos.forEach(function(pr){ var p=(pr.programa||"").trim(); if(p && !vistos[p]){ vistos[p]=1; out.push(p); } });
+    el("programasList").innerHTML = out.map(function(p){ return '<option value="'+esc(p)+'">'; }).join("");
   }
 
   function render(){
@@ -2187,6 +2275,208 @@
   // todas las fechas, y eso tiene que verse.
   var PROY_ESTADOS=["Planificado","En ejecución","Suspendido","Completado"];
   var ETAPA_ESTADOS=["Pendiente","En proceso","Completada"];
+  // Mismos tres niveles y colores que las actividades (PRI_META/priRank): un proyecto no
+  // tiene una escala de prioridad distinta a la del resto de la app.
+  var PROY_PRIORIDADES=["Alta","Media","Baja"];
+
+  // Datos del levantamiento "Líneas de vida 2026": 16 puntos de riesgo de caída de altura,
+  // uno por proyecto, con ids fijos para que "Cargar programa" sea idempotente en cada
+  // dispositivo y, si se siembra por separado en el celular y en la laptop, la
+  // sincronización los reconozca como el mismo registro en vez de duplicarlos.
+  var LV_SEED=[
+    { id:'lv01', nombre:'Recepción de ácido sulfónico – Jabonería',
+      descripcion:'Riesgo de caída de altura y golpes al abrir manholes del camión cisterna. Interviene el operador de saponificación (rompe sellos y abre tapas) y control de calidad (muestreo). Frecuencia: 1–2 camiones por semana. Altura aprox. 4 m. Zona abierta, sin sistema de línea de vida; comparte punto con la descarga de soda cáustica de Materias Primas.',
+      responsable:'', sede:'Matriz', area:'HCP - Jabonería', programa:'Líneas de vida 2026',
+      prioridad:'Alta', presupuesto:null, presupuestoNota:'',
+      fechaInicio:'', fechaFin:'', estado:'Planificado',
+      etapas:[
+        { id:'lv01-e1', nombre:'Evaluación técnica y selección de sistema', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv01-e2', nombre:'Cotización y comparación de proveedores', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv01-e3', nombre:'Aprobación de presupuesto', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv01-e4', nombre:'Instalación y montaje', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv01-e5', nombre:'Certificación y capacitación', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+      ] },
+    { id:'lv02', nombre:'Limpieza de torres de enfriamiento – Jabonería',
+      descripcion:'Riesgo de caída de altura al retirar los tablones de madera de las torres de enfriamiento de la línea 4. Interviene el operador de saponificación, aprox. cada 2 meses. Altura aprox. 6 m, sobre la plataforma de las torres. Sin sistema de línea de vida previo.',
+      responsable:'', sede:'Matriz', area:'HCP - Jabonería', programa:'Líneas de vida 2026',
+      prioridad:'Media', presupuesto:null, presupuestoNota:'',
+      fechaInicio:'', fechaFin:'', estado:'Planificado',
+      etapas:[
+        { id:'lv02-e1', nombre:'Evaluación técnica y selección de sistema', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv02-e2', nombre:'Cotización y comparación de proveedores', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv02-e3', nombre:'Aprobación de presupuesto', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv02-e4', nombre:'Instalación y montaje', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv02-e5', nombre:'Certificación y capacitación', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+      ] },
+    { id:'lv03', nombre:'Descarga de soda cáustica – Materias Primas',
+      descripcion:'Riesgo de caída de altura y golpes al romper sellos y tomar muestras en el camión cisterna. Interviene el ayudante de planta, todos los días. Altura aprox. 4 m. Zona abierta, sin línea de vida; comparte punto con la recepción de ácido sulfónico de Jabonería.',
+      responsable:'', sede:'Matriz', area:'Materias Primas', programa:'Líneas de vida 2026',
+      prioridad:'Alta', presupuesto:null, presupuestoNota:'',
+      fechaInicio:'', fechaFin:'', estado:'Planificado',
+      etapas:[
+        { id:'lv03-e1', nombre:'Evaluación técnica y selección de sistema', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv03-e2', nombre:'Cotización y comparación de proveedores', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv03-e3', nombre:'Aprobación de presupuesto', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv03-e4', nombre:'Instalación y montaje', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv03-e5', nombre:'Certificación y capacitación', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+      ] },
+    { id:'lv04', nombre:'Muelle de Diésel – Materias Primas',
+      descripcion:'Riesgo de caída de altura y golpes al abrir tapas para la descarga; se accede por una rampa existente. Interviene el ayudante de planta, 1 vez al mes. Altura aprox. 4,5 m. Existe una línea de vida sin certificación normativa.',
+      responsable:'', sede:'Matriz', area:'Materias Primas', programa:'Líneas de vida 2026',
+      prioridad:'Baja', presupuesto:null, presupuestoNota:'',
+      fechaInicio:'', fechaFin:'', estado:'Planificado',
+      etapas:[
+        { id:'lv04-e1', nombre:'Evaluación técnica y selección de sistema', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv04-e2', nombre:'Cotización y comparación de proveedores', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv04-e3', nombre:'Aprobación de presupuesto', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv04-e4', nombre:'Instalación y montaje', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv04-e5', nombre:'Certificación y capacitación', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+      ] },
+    { id:'lv05', nombre:'Garita báscula – Materias Primas',
+      descripcion:'Riesgo de caída de altura al revisar sellos en la parte superior del tanquero. Interviene el guardia de seguridad física, diariamente, para los procesos de HCP, Materias Primas, importaciones, exportaciones y abastecimiento. Altura aprox. 4,5 m. Zona abierta, sin línea de vida previa.',
+      responsable:'', sede:'Matriz', area:'Materias Primas', programa:'Líneas de vida 2026',
+      prioridad:'Alta', presupuesto:null, presupuestoNota:'',
+      fechaInicio:'', fechaFin:'', estado:'Planificado',
+      etapas:[
+        { id:'lv05-e1', nombre:'Evaluación técnica y selección de sistema', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv05-e2', nombre:'Cotización y comparación de proveedores', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv05-e3', nombre:'Aprobación de presupuesto', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv05-e4', nombre:'Instalación y montaje', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv05-e5', nombre:'Certificación y capacitación', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+      ] },
+    { id:'lv06', nombre:'Patio de inspección frente a la desmotadora – Materias Primas',
+      descripcion:'Riesgo de caída de altura durante la inspección de vehículos que despachan RBD a granel. Intervienen ayudante y gestor de calidad, y guardia de seguridad, diariamente (control de calidad de madrugada). Altura aprox. 4,5 m. Zona abierta, sin línea de vida.',
+      responsable:'', sede:'Matriz', area:'Materias Primas', programa:'Líneas de vida 2026',
+      prioridad:'Alta', presupuesto:null, presupuestoNota:'Podría compartir el equipo portátil cotizado para la descarga de materia prima en Piletas (Belech Tuff Built Cubo, USD 38.246,96) si los puntos son adyacentes; confirmar con el proveedor antes de cotizar por separado.',
+      fechaInicio:'', fechaFin:'', estado:'Planificado',
+      etapas:[
+        { id:'lv06-e1', nombre:'Evaluación técnica y selección de sistema', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv06-e2', nombre:'Cotización y comparación de proveedores', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'Podría compartir el equipo portátil cotizado para la descarga de materia prima en Piletas (Belech Tuff Built Cubo, USD 38.246,96) si los puntos son adyacentes; confirmar con el proveedor antes de cotizar por separado.', evidencias:[] },
+        { id:'lv06-e3', nombre:'Aprobación de presupuesto', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv06-e4', nombre:'Instalación y montaje', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv06-e5', nombre:'Certificación y capacitación', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+      ] },
+    { id:'lv07', nombre:'Muelle de carga TA – Materias Primas',
+      descripcion:'Riesgo de caída de altura durante la inspección y conexión de mangueras para el despacho de RBD a granel. Intervienen ayudante y gestor de calidad, y ayudante de planta, diariamente. Altura aprox. 4,5 m. Ya existen anclajes con retráctiles en riel; punto de altura con plataforma de acceso.',
+      responsable:'', sede:'Matriz', area:'Materias Primas', programa:'Líneas de vida 2026',
+      prioridad:'Baja', presupuesto:null, presupuestoNota:'',
+      fechaInicio:'', fechaFin:'', estado:'Planificado',
+      etapas:[
+        { id:'lv07-e1', nombre:'Evaluación técnica y selección de sistema', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv07-e2', nombre:'Cotización y comparación de proveedores', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv07-e3', nombre:'Aprobación de presupuesto', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv07-e4', nombre:'Instalación y montaje', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv07-e5', nombre:'Certificación y capacitación', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+      ] },
+    { id:'lv08', nombre:'Muelle de carga IT – Materias Primas',
+      descripcion:'Riesgo de caída de altura durante la inspección de vehículos de descarga. Interviene el ayudante de planta, ~2 veces al mes. Altura aprox. 4,5 m. Punto dentro de silo techado, con plataforma de acceso; existe una línea de vida sin certificación normativa.',
+      responsable:'', sede:'Matriz', area:'Materias Primas', programa:'Líneas de vida 2026',
+      prioridad:'Media', presupuesto:null, presupuestoNota:'',
+      fechaInicio:'', fechaFin:'', estado:'Planificado',
+      etapas:[
+        { id:'lv08-e1', nombre:'Evaluación técnica y selección de sistema', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv08-e2', nombre:'Cotización y comparación de proveedores', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv08-e3', nombre:'Aprobación de presupuesto', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv08-e4', nombre:'Instalación y montaje', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv08-e5', nombre:'Certificación y capacitación', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+      ] },
+    { id:'lv09', nombre:'Descarga de materia prima – Piletas',
+      descripcion:'Riesgo de caída de altura al abrir tapas y cargar/descargar producto desde la plataforma. Interviene el ayudante de planta, diariamente. Altura aprox. 4,5 m. Zona abierta, con parqueo de vehículos perpendicular a la plataforma.',
+      responsable:'', sede:'Matriz', area:'Materias Primas', programa:'Líneas de vida 2026',
+      prioridad:'Alta', presupuesto:38246.96, presupuestoNota:'Cotización Belech: sistema portátil Tuff Built Cubo para 2 usuarios, base de acero rellena de concreto, brazo giratorio de 3 m, para alturas de 7 a 9 m (USD 38.246,96). El mismo equipo podría cubrir también el patio frente a la desmotadora si los puntos son adyacentes.',
+      fechaInicio:'', fechaFin:'', estado:'Planificado',
+      etapas:[
+        { id:'lv09-e1', nombre:'Evaluación técnica y selección de sistema', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv09-e2', nombre:'Cotización y comparación de proveedores', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'Cotización Belech: sistema portátil Tuff Built Cubo para 2 usuarios, base de acero rellena de concreto, brazo giratorio de 3 m, para alturas de 7 a 9 m (USD 38.246,96). El mismo equipo podría cubrir también el patio frente a la desmotadora si los puntos son adyacentes.', evidencias:[] },
+        { id:'lv09-e3', nombre:'Aprobación de presupuesto', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv09-e4', nombre:'Instalación y montaje', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv09-e5', nombre:'Certificación y capacitación', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+      ] },
+    { id:'lv10', nombre:'Inspección y sellado de tanqueros – Materias Primas',
+      descripcion:'Riesgo de caída de altura al inspeccionar y sellar los manholes de salida, en ambos turnos. Interviene el ayudante de planta, diariamente. Altura aprox. 4,5 m. Este punto podría eliminarse si se concreta el proyecto de flujómetros en los TA (la inspección y sellado se trasladaría a ese punto).',
+      responsable:'', sede:'Matriz', area:'Materias Primas', programa:'Líneas de vida 2026',
+      prioridad:'Media', presupuesto:null, presupuestoNota:'',
+      fechaInicio:'', fechaFin:'', estado:'Planificado',
+      etapas:[
+        { id:'lv10-e1', nombre:'Evaluación técnica y selección de sistema', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv10-e2', nombre:'Cotización y comparación de proveedores', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv10-e3', nombre:'Aprobación de presupuesto', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv10-e4', nombre:'Instalación y montaje', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv10-e5', nombre:'Certificación y capacitación', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+      ] },
+    { id:'lv11', nombre:'Muelle TX1 – Materias Primas',
+      descripcion:'Riesgo de caída de altura al abrir tapas e inspeccionar materia prima cruda, y al tomar muestras. Intervienen ayudante de planta, gestor y ayudante de calidad, diariamente. Altura aprox. 5 m. Ya existen anclajes con retráctiles en riel.',
+      responsable:'', sede:'Matriz', area:'Materias Primas', programa:'Líneas de vida 2026',
+      prioridad:'Baja', presupuesto:null, presupuestoNota:'',
+      fechaInicio:'', fechaFin:'', estado:'Planificado',
+      etapas:[
+        { id:'lv11-e1', nombre:'Evaluación técnica y selección de sistema', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv11-e2', nombre:'Cotización y comparación de proveedores', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv11-e3', nombre:'Aprobación de presupuesto', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv11-e4', nombre:'Instalación y montaje', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv11-e5', nombre:'Certificación y capacitación', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+      ] },
+    { id:'lv12', nombre:'Muelle TB – Materias Primas',
+      descripcion:'Riesgo de caída de altura durante el despacho de Tocco, fertilizante y aguas negras para condesa. Intervienen ayudante de planta y ayudante de PTAR, diariamente. Altura aprox. 5 m. Existe plataforma de acceso pero sin sistema de detección de caídas.',
+      responsable:'', sede:'Matriz', area:'Materias Primas', programa:'Líneas de vida 2026',
+      prioridad:'Alta', presupuesto:7759.13, presupuestoNota:'Suma de cuatro cotizaciones: M&M — viga IPE/IPN e instalación de tubos de apoyo USD 3.610,44 + materiales USD 1.494,99; Tonicomsa — anclaje deslizante KStrong para vigas USD 1.104,00; Seripacar — retráctil 3590036 Protecta con anclaje tipo trolley USD 1.549,70.',
+      fechaInicio:'', fechaFin:'', estado:'Planificado',
+      etapas:[
+        { id:'lv12-e1', nombre:'Evaluación técnica y selección de sistema', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv12-e2', nombre:'Cotización y comparación de proveedores', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'Suma de cuatro cotizaciones: M&M — viga IPE/IPN e instalación de tubos de apoyo USD 3.610,44 + materiales USD 1.494,99; Tonicomsa — anclaje deslizante KStrong para vigas USD 1.104,00; Seripacar — retráctil 3590036 Protecta con anclaje tipo trolley USD 1.549,70.', evidencias:[] },
+        { id:'lv12-e3', nombre:'Aprobación de presupuesto', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv12-e4', nombre:'Instalación y montaje', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv12-e5', nombre:'Certificación y capacitación', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+      ] },
+    { id:'lv13', nombre:'Punto TX20 – Materias Primas',
+      descripcion:'Riesgo de caída de altura, de uso muy esporádico. Interviene el ayudante de planta, 1–2 veces al año. Altura aprox. 4,5 m. No aparece en el listado maestro de prioridades del levantamiento; se incluye por completitud, con prioridad baja por defecto.',
+      responsable:'', sede:'Matriz', area:'Materias Primas', programa:'Líneas de vida 2026',
+      prioridad:'Baja', presupuesto:null, presupuestoNota:'',
+      fechaInicio:'', fechaFin:'', estado:'Planificado',
+      etapas:[
+        { id:'lv13-e1', nombre:'Evaluación técnica y selección de sistema', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv13-e2', nombre:'Cotización y comparación de proveedores', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv13-e3', nombre:'Aprobación de presupuesto', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv13-e4', nombre:'Instalación y montaje', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv13-e5', nombre:'Certificación y capacitación', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+      ] },
+    { id:'lv14', nombre:'Lavado interno de tanqueros – Logística',
+      descripcion:'Riesgo de caída de altura y golpes al acceder a los manholes por la plataforma existente para el lavado interno de tanqueros. Interviene el ayudante de lavado, diariamente. Altura aprox. 5 m.',
+      responsable:'', sede:'Matriz', area:'Logística', programa:'Líneas de vida 2026',
+      prioridad:'Alta', presupuesto:12113.03, presupuestoNota:'Tres opciones cotizadas, pendiente de decisión: Seripacar DBI Sala Uni-8 (2 líneas de 21 m, manos libres, hasta 140 kg) USD 12.113,03 — la más económica; Belech Travsafe (28 m bajo techo, acero inoxidable, garantía 10 años) USD 21.162,24 + arneses y retráctiles USD 3.348,02; Proaño Altirail LR (2 sistemas de 17,6 m, máx. 3 usuarios) USD 57.356,39. El presupuesto estimado usa la opción más económica como referencia de planificación.',
+      fechaInicio:'', fechaFin:'', estado:'Planificado',
+      etapas:[
+        { id:'lv14-e1', nombre:'Evaluación técnica y selección de sistema', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv14-e2', nombre:'Cotización y comparación de proveedores', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'Tres opciones cotizadas, pendiente de decisión: Seripacar DBI Sala Uni-8 (2 líneas de 21 m, manos libres, hasta 140 kg) USD 12.113,03 — la más económica; Belech Travsafe (28 m bajo techo, acero inoxidable, garantía 10 años) USD 21.162,24 + arneses y retráctiles USD 3.348,02; Proaño Altirail LR (2 sistemas de 17,6 m, máx. 3 usuarios) USD 57.356,39. El presupuesto estimado usa la opción más económica como referencia de planificación.', evidencias:[] },
+        { id:'lv14-e3', nombre:'Aprobación de presupuesto', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv14-e4', nombre:'Instalación y montaje', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv14-e5', nombre:'Certificación y capacitación', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+      ] },
+    { id:'lv15', nombre:'Descarga de hipoclorito de sodio – Clorox',
+      descripcion:'Riesgo de caída de altura y golpes al romper sellos, abrir tapas e inspeccionar el vaciado del tanquero. Intervienen el chofer del tanquero y el formulador de Clorox, diariamente. Altura aprox. 5 m.',
+      responsable:'', sede:'Matriz', area:'Clorox', programa:'Líneas de vida 2026',
+      prioridad:'Alta', presupuesto:null, presupuestoNota:'',
+      fechaInicio:'', fechaFin:'', estado:'Planificado',
+      etapas:[
+        { id:'lv15-e1', nombre:'Evaluación técnica y selección de sistema', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv15-e2', nombre:'Cotización y comparación de proveedores', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv15-e3', nombre:'Aprobación de presupuesto', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv15-e4', nombre:'Instalación y montaje', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv15-e5', nombre:'Certificación y capacitación', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+      ] },
+    { id:'lv16', nombre:'Recepción de ácido sulfónico – Línea Líquidos',
+      descripcion:'Riesgo de caída de altura y golpes al romper sellos y abrir tapas del camión cisterna. Interviene el operador de saponificación, según producción (1–2 camiones por semana). Altura aprox. 4 m. Prioridad alta según el listado maestro de puntos; no se detalló por separado en el levantamiento.',
+      responsable:'', sede:'Matriz', area:'HCP - Líquido', programa:'Líneas de vida 2026',
+      prioridad:'Alta', presupuesto:null, presupuestoNota:'',
+      fechaInicio:'', fechaFin:'', estado:'Planificado',
+      etapas:[
+        { id:'lv16-e1', nombre:'Evaluación técnica y selección de sistema', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv16-e2', nombre:'Cotización y comparación de proveedores', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv16-e3', nombre:'Aprobación de presupuesto', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv16-e4', nombre:'Instalación y montaje', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+        { id:'lv16-e5', nombre:'Certificación y capacitación', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+      ] },
+  ];
 
   function loadProyectos(){
     try{ state.proyectos=JSON.parse(localStorage.getItem(PROY_KEY))||[]; }catch(e){ state.proyectos=[]; }
@@ -2250,17 +2540,86 @@
       proxima: prox
     };
   }
+  // RAG (rojo/ámbar/verde): resume si el proyecto necesita atención, más allá del avance
+  // en sí — uno puede ir al 80 % y aun así tener una etapa vencida, que es lo que hay que
+  // ver primero. Se apoya sólo en datos que el proyecto ya tiene, nada nuevo que llenar.
+  function proyRAG(pr){
+    var m=proyMetricas(pr), hoy=todayISO();
+    if(pr.estado==="Completado") return {nivel:"verde", motivo:"Proyecto completado"};
+    if(m.vencidas>0) return {nivel:"rojo", motivo:m.vencidas+" etapa"+(m.vencidas===1?"":"s")+" vencida"+(m.vencidas===1?"":"s")};
+    if(pr.estado==="Suspendido") return {nivel:"rojo", motivo:"Proyecto suspendido"};
+    if(pr.fechaFin && pr.fechaFin<hoy && m.avance<100) return {nivel:"rojo", motivo:"Superó la fecha de fin prevista"};
+    if(m.total===0) return {nivel:"ambar", motivo:"Todavía sin etapas definidas"};
+    if(m.proxima && daysTo(m.proxima)<=7) return {nivel:"ambar", motivo:"Hay una etapa por vencer en 7 días o menos"};
+    if(pr.fechaInicio && pr.fechaInicio<=hoy && m.avance===0) return {nivel:"ambar", motivo:"Ya debería haber iniciado y no registra avance"};
+    return {nivel:"verde", motivo:"En curso sin alertas"};
+  }
+  var RAG_RANK={rojo:0, ambar:1, verde:2};
+  function fmtUSD(n){
+    if(n==null || isNaN(n)) return "—";
+    var s=Math.round(n).toString();
+    return "$"+s.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
   function proyFiltrados(){
-    var f=state.proyFEstado;
-    var arr=state.proyectos.filter(function(pr){ return !f || (pr.estado||"Planificado")===f; });
-    // Primero lo que apremia: etapas vencidas, luego el vencimiento más próximo.
+    var fe=state.proyFEstado, fa=state.proyFArea, fp=state.proyFPrioridad;
+    var arr=state.proyectos.filter(function(pr){
+      return (!fe || (pr.estado||"Planificado")===fe)
+          && (!fa || (pr.area||"")===fa)
+          && (!fp || (pr.prioridad||"Media")===fp);
+    });
+    // Primero lo que arde: RAG rojo, luego prioridad, luego el vencimiento más próximo.
     return arr.sort(function(x,y){
+      var rx=RAG_RANK[proyRAG(x).nivel], ry=RAG_RANK[proyRAG(y).nivel];
+      if(rx!==ry) return rx-ry;
+      var px=priRank(x.prioridad||"Media"), py=priRank(y.prioridad||"Media");
+      if(px!==py) return px-py;
       var mx=proyMetricas(x), my=proyMetricas(y);
-      if((my.vencidas>0)-(mx.vencidas>0)) return (my.vencidas>0)-(mx.vencidas>0);
       var a=mx.proxima||"9999-12-31", b=my.proxima||"9999-12-31";
       if(a!==b) return a<b?-1:1;
       return (x.nombre||"").localeCompare(y.nombre||"");
     });
+  }
+  // Áreas presentes en los proyectos ya guardados, para el filtro dinámico.
+  function proyAreasUsadas(){
+    var vistas={}, out=[];
+    state.proyectos.forEach(function(pr){ var a=(pr.area||"").trim(); if(a && !vistas[a]){ vistas[a]=1; out.push(a); } });
+    return out.sort(function(a,b){ return a.localeCompare(b); });
+  }
+  // Vista agrupada: las áreas también se ordenan entre sí, primero la que tenga algún
+  // proyecto en rojo y luego por la prioridad más alta que contenga — mismo criterio que
+  // ya se usa para ordenar categorías de actividades.
+  function proyAgruparPorArea(rows){
+    var groups={}, orden=[];
+    rows.forEach(function(pr){
+      var a=pr.area||"Sin área";
+      if(!groups[a]){ groups[a]=[]; orden.push(a); }
+      groups[a].push(pr);
+    });
+    orden.sort(function(x,y){
+      var gx=groups[x], gy=groups[y];
+      var rx=Math.min.apply(null, gx.map(function(p){ return RAG_RANK[proyRAG(p).nivel]; }));
+      var ry=Math.min.apply(null, gy.map(function(p){ return RAG_RANK[proyRAG(p).nivel]; }));
+      if(rx!==ry) return rx-ry;
+      var px=Math.min.apply(null, gx.map(function(p){ return priRank(p.prioridad||"Media"); }));
+      var py=Math.min.apply(null, gy.map(function(p){ return priRank(p.prioridad||"Media"); }));
+      if(px!==py) return px-py;
+      return x.localeCompare(y);
+    });
+    return {orden:orden, groups:groups};
+  }
+  // Los próximos N vencimientos de etapa entre todos los proyectos: lo primero que un
+  // responsable de programa necesita ver, según cómo se reportan los hitos en un
+  // portafolio ejecutivo.
+  function proyProximosHitos(limite){
+    var out=[];
+    state.proyectos.forEach(function(pr){
+      (pr.etapas||[]).forEach(function(et){
+        if(et.estado==="Completada" || !et.fechaCump) return;
+        out.push({ proyecto:pr, etapa:et, fecha:et.fechaCump, dias:daysTo(et.fechaCump), vencida:et.fechaCump<todayISO() });
+      });
+    });
+    out.sort(function(a,b){ return a.fecha<b.fecha?-1:(a.fecha>b.fecha?1:0); });
+    return out.slice(0, limite||5);
   }
 
   // ---- lista ----
@@ -2269,14 +2628,17 @@
   }
   function proyCardHTML(pr){
     var m=proyMetricas(pr), est=pr.estado||"Planificado";
-    var alerta = m.vencidas>0;
+    var rag=proyRAG(pr), alerta=(rag.nivel==="rojo");
+    var pri=pr.prioridad||"Media", pm=PRI_META[pri]||PRI_META["Media"];
     var meta=[pr.responsable, pr.area, pr.sede].filter(Boolean).join(" · ");
     var cumpl = m.cumplimiento===null ? "—" : m.cumplimiento+"%";
     var cumplCls = m.cumplimiento===null ? "" : (m.cumplimiento>=90?"ok":(m.cumplimiento>=70?"warn":"crit"));
     return '<div class="proy-card'+(alerta?" alerta":"")+'" data-proyid="'+pr.id+'">'+
       '<div class="proy-top">'+
+        '<span class="rag-dot rag-'+rag.nivel+'" title="'+esc(rag.motivo)+'"></span>'+
+        '<span class="ptag" style="color:'+pm.col+';border-color:'+pm.col+'66;background-image:linear-gradient('+pm.col+'2b,'+pm.col+'2b)">'+esc(pm.lab)+'</span>'+
         '<span class="est-tag e'+PROY_ESTADOS.indexOf(est)+'">'+esc(est)+'</span>'+
-        (alerta?'<span class="est-tag venc">'+m.vencidas+' etapa'+(m.vencidas===1?"":"s")+' vencida'+(m.vencidas===1?"":"s")+'</span>':'')+
+        (alerta&&m.vencidas>0?'<span class="est-tag venc">'+m.vencidas+' etapa'+(m.vencidas===1?"":"s")+' vencida'+(m.vencidas===1?"":"s")+'</span>':'')+
       '</div>'+
       '<div class="proy-nom">'+esc(pr.nombre)+'</div>'+
       (meta?'<div class="proy-meta">'+esc(meta)+'</div>':'')+
@@ -2289,8 +2651,27 @@
       '</div>'+
       '<div class="proy-foot">'+
         '<span class="proy-prox">'+(m.proxima?('Próxima fecha: <b>'+fmtD(m.proxima)+'</b>'):'Sin fechas pendientes')+'</span>'+
+        (pr.presupuesto?'<span class="proy-budget">'+fmtUSD(pr.presupuesto)+'</span>':'')+
         '<button class="acc-btn" data-proyopen="'+pr.id+'">Abrir</button>'+
       '</div>'+
+    '</div>';
+  }
+  function proyAreaGrupoHTML(area, lista){
+    var avg=Math.round(lista.reduce(function(a,p){ return a+proyMetricas(p).avance; },0)/lista.length);
+    var peor=lista.reduce(function(p,pr){ var r=proyRAG(pr).nivel; return RAG_RANK[r]<RAG_RANK[p]?r:p; }, "verde");
+    return '<div class="proy-area-h"><span class="rag-dot rag-'+peor+'"></span>'+
+      '<span class="proy-area-t">'+esc(area)+'</span>'+
+      '<span class="proy-area-n">'+lista.length+' proyecto'+(lista.length===1?"":"s")+'</span>'+
+      '<span class="proy-area-avance">'+avg+'% avance</span></div>'+
+      '<div class="proy-grid">'+lista.map(proyCardHTML).join("")+'</div>';
+  }
+  function hitoRowHTML(h){
+    var cls = h.vencida?"crit":(h.dias<=3?"warn":"");
+    var txt = h.vencida?"VENCIDA":(h.dias===0?"HOY":h.dias+" DÍA"+(h.dias===1?"":"S"));
+    return '<div class="hito-row" data-proyopen="'+h.proyecto.id+'" style="cursor:pointer">'+
+      '<span class="cdown '+cls+'">'+txt+'</span>'+
+      '<div class="hito-tx"><div class="hito-et">'+esc(h.etapa.nombre)+'</div><div class="hito-pr">'+esc(h.proyecto.nombre)+'</div></div>'+
+      '<span class="hito-fecha">'+fmtD(h.fecha)+'</span>'+
     '</div>';
   }
   function renderProyectos(){
@@ -2300,25 +2681,45 @@
     actualizarFab();
     if(state.proyAbierto){ renderProyDetalle(); return; }
 
+    // el filtro de área depende de qué proyectos existen; se rehace en cada render
+    var areas=proyAreasUsadas(), selArea=el("proyFArea"), valArea=state.proyFArea;
+    selArea.innerHTML='<option value="">Todas las áreas</option>'+areas.map(function(a){ return '<option'+(a===valArea?" selected":"")+'>'+esc(a)+'</option>'; }).join("");
+    if(valArea && areas.indexOf(valArea)<0){ state.proyFArea=""; selArea.value=""; }
+
     var rows=proyFiltrados();
     el("proyCount").textContent="("+rows.length+")";
-    el("proyCards").innerHTML = rows.length
-      ? rows.map(proyCardHTML).join("")
-      : '<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2.9" y="7.3" width="18.2" height="12.9" rx="2.4"/><path d="M8.7 7.3V5.5a2 2 0 0 1 2-2h2.6a2 2 0 0 1 2 2v1.8"/><path d="M2.9 12.5h18.2"/></svg><h3>Sin proyectos registrados</h3><div>Usa «Nuevo proyecto» para el primero, por ejemplo la instalación de líneas de vida.</div></div>';
+    if(!rows.length){
+      el("proyCards").innerHTML='<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2.9" y="7.3" width="18.2" height="12.9" rx="2.4"/><path d="M8.7 7.3V5.5a2 2 0 0 1 2-2h2.6a2 2 0 0 1 2 2v1.8"/><path d="M2.9 12.5h18.2"/></svg><h3>Sin proyectos registrados</h3><div>Usa «Nuevo proyecto» para el primero, por ejemplo la instalación de líneas de vida.</div></div>';
+    } else if(state.proyAgrupado){
+      var ag=proyAgruparPorArea(rows);
+      el("proyCards").innerHTML = ag.orden.map(function(a){ return proyAreaGrupoHTML(a, ag.groups[a]); }).join("");
+    } else {
+      el("proyCards").innerHTML = '<div class="proy-grid">'+rows.map(proyCardHTML).join("")+'</div>';
+    }
 
     var tot=state.proyectos.length;
+    el("proyResumen").hidden = !tot;
+    if(tot){
+      var hitos=proyProximosHitos(5);
+      el("proyHitosList").innerHTML = hitos.length ? hitos.map(hitoRowHTML).join("")
+        : '<div class="proy-vacio-hitos">Sin vencimientos próximos registrados.</div>';
+      var conPpto=state.proyectos.filter(function(pr){ return typeof pr.presupuesto==="number" && pr.presupuesto>0; });
+      var totPpto=conPpto.reduce(function(a,pr){ return a+pr.presupuesto; },0);
+      el("proyResumenBudget").innerHTML = 'Presupuesto estimado: <b>'+fmtUSD(totPpto)+'</b> · '+conPpto.length+' de '+tot+' cotizados';
+    }
+
     var activos=state.proyectos.filter(function(pr){ return (pr.estado||"Planificado")!=="Completado"; });
     var avg = activos.length ? Math.round(activos.reduce(function(a,pr){ return a+proyMetricas(pr).avance; },0)/activos.length) : 0;
-    var venc = state.proyectos.reduce(function(a,pr){ return a+proyMetricas(pr).vencidas; },0);
+    var ragCount={rojo:0,ambar:0,verde:0}; state.proyectos.forEach(function(pr){ ragCount[proyRAG(pr).nivel]++; });
     var evs=[]; state.proyectos.forEach(function(pr){ var m=proyMetricas(pr); if(m.cumplimiento!==null) evs.push(m.cumplimiento); });
     var cum = evs.length ? Math.round(evs.reduce(function(a,b){return a+b;},0)/evs.length) : null;
     el("proyKpis").innerHTML=
       '<div class="kpi accent"><div class="kl">Proyectos</div><div class="kv tabnum">'+tot+'</div><div class="kfoot"><span style="color:var(--muted);font-size:12px">'+activos.length+' en curso</span></div></div>'+
-      '<div class="kpi done"><div class="kl">Avance promedio</div><div class="kv tabnum">'+avg+'%</div><div class="kfoot"><span class="livedot"></span><span style="color:var(--muted);font-size:12px">proyectos activos</span></div></div>'+
-      '<div class="kpi late"><div class="kl">Etapas vencidas</div><div class="kv tabnum">'+venc+'</div><div class="kfoot"><span style="color:var(--muted);font-size:12px">'+(venc?"requieren acción":"ninguna")+'</span></div></div>'+
+      '<div class="kpi done"><div class="kl">Avance del programa</div><div class="kv tabnum">'+avg+'%</div><div class="kfoot"><span class="livedot"></span><span style="color:var(--muted);font-size:12px">proyectos activos</span></div></div>'+
+      '<div class="kpi late"><div class="kl">En riesgo</div><div class="kv tabnum">'+ragCount.rojo+'</div><div class="kfoot"><span style="color:var(--muted);font-size:12px">'+(ragCount.rojo?"requieren acción":"ninguno")+'</span></div></div>'+
       '<div class="kpi proc"><div class="kl">Cumplimiento</div><div class="kv tabnum">'+(cum===null?"—":cum+"%")+'</div><div class="kfoot"><span style="color:var(--muted);font-size:12px">dentro de plazo</span></div></div>';
 
-    var b=el("sbProyBadge"); if(b){ b.textContent=venc; b.classList.toggle("show", venc>0); }
+    var b=el("sbProyBadge"); if(b){ b.textContent=ragCount.rojo; b.classList.toggle("show", ragCount.rojo>0); }
   }
 
   // ---- detalle ----
@@ -2359,14 +2760,22 @@
   function renderProyDetalle(){
     var pr=proyById(state.proyAbierto); if(!pr) return;
     var m=proyMetricas(pr);
+    var rag=proyRAG(pr), pri=pr.prioridad||"Media", pm=PRI_META[pri]||PRI_META["Media"];
     el("pdNombre").textContent=pr.nombre;
-    el("pdMeta").textContent=[pr.responsable, pr.area, pr.sede, pr.estado].filter(Boolean).join(" · ");
+    el("pdMeta").innerHTML =
+      '<span class="rag-dot rag-'+rag.nivel+'" title="'+esc(rag.motivo)+'" style="margin-right:2px"></span>'+
+      '<span class="ptag" style="color:'+pm.col+';border-color:'+pm.col+'66;background-image:linear-gradient('+pm.col+'2b,'+pm.col+'2b);margin-right:6px">'+esc(pm.lab)+'</span>'+
+      esc([pr.responsable, pr.area, pr.sede, pr.estado].filter(Boolean).join(" · "))+
+      (pr.programa?' <span style="color:var(--muted)">· '+esc(pr.programa)+'</span>':'');
     el("pdDesc").textContent=pr.descripcion||"";
     el("pdDesc").hidden=!pr.descripcion;
+    el("pdPresupuestoNota").textContent=pr.presupuestoNota?("Presupuesto: "+pr.presupuestoNota):"";
+    el("pdPresupuestoNota").hidden=!pr.presupuestoNota;
     el("pdFechas").innerHTML=
       '<div class="acc-d"><div class="l">Inicio</div><div class="v">'+fmtD(pr.fechaInicio)+'</div></div>'+
       '<div class="acc-d"><div class="l">Fin previsto</div><div class="v'+(pr.fechaFin&&pr.fechaFin<todayISO()&&m.avance<100?" crit":"")+'">'+fmtD(pr.fechaFin)+'</div></div>'+
-      '<div class="acc-d"><div class="l">Etapas</div><div class="v">'+m.completadas+' / '+m.total+'</div></div>';
+      '<div class="acc-d"><div class="l">Etapas</div><div class="v">'+m.completadas+' / '+m.total+'</div></div>'+
+      (pr.presupuesto?'<div class="acc-d"><div class="l">Presupuesto estimado</div><div class="v">'+fmtUSD(pr.presupuesto)+'</div></div>':'');
     el("pdBarras").innerHTML=
       '<div class="pb"><div class="pb-l"><span>Avance</span><b class="tabnum">'+m.avance+'%</b></div>'+barraHTML(m.avance,"av")+'</div>'+
       '<div class="pb"><div class="pb-l"><span>Cumplimiento</span><b class="tabnum">'+(m.cumplimiento===null?"—":m.cumplimiento+"%")+'</b></div>'+
@@ -2395,6 +2804,11 @@
     el("p_ini").value=pr?(pr.fechaInicio||""):todayISO();
     el("p_fin").value=pr?(pr.fechaFin||""):"";
     el("p_estado").value=pr?(pr.estado||"Planificado"):"Planificado";
+    el("p_pri").value=pr?(pr.prioridad||"Media"):"Media";
+    el("p_programa").value=pr?(pr.programa||""):"";
+    el("p_presupuesto").value=pr&&pr.presupuesto?pr.presupuesto:"";
+    el("p_presupuestoNota").value=pr?(pr.presupuestoNota||""):"";
+    actualizarListaProgramas();
     el("pdelBtn").style.display=pr?"":"none";
     el("pw_nombre").classList.remove("invalid");
     el("overlay").classList.add("open"); el("psheet").classList.add("open");
@@ -2404,9 +2818,12 @@
   function saveProyForm(){
     var nombre=el("p_nombre").value.trim();
     if(!nombre){ el("pw_nombre").classList.add("invalid"); el("p_nombre").focus(); return; }
+    var ppto=parseFloat(el("p_presupuesto").value);
     var datos={ nombre:nombre, descripcion:el("p_desc").value.trim(), responsable:el("p_resp").value.trim(),
       sede:el("p_sede").value, area:el("p_area").value.trim(), fechaInicio:el("p_ini").value,
-      fechaFin:el("p_fin").value, estado:el("p_estado").value };
+      fechaFin:el("p_fin").value, estado:el("p_estado").value, prioridad:el("p_pri").value,
+      programa:el("p_programa").value.trim(), presupuesto:(isNaN(ppto)||ppto<=0)?null:ppto,
+      presupuestoNota:el("p_presupuestoNota").value.trim() };
     if(editingProy){
       var pr=proyById(editingProy);
       if(pr){ for(var k in datos) pr[k]=datos[k]; }
@@ -2619,6 +3036,30 @@
         (a.estado==="Reportado"?"":(info.restantes===null?"":info.restantes)),a.estado||"Pendiente",a.fechaReporte,a.desc].map(q).join(","));
     });
     download("accidentes-"+stamp()+".csv","﻿"+lines.join("\r\n"),"text/csv;charset=utf-8","CSV de accidentes exportado");
+  }
+  function exportProyCSV(){
+    if(!state.proyectos.length){ alert("Aún no hay proyectos registrados."); return; }
+    var head=["Proyecto","Programa","Área","Sede","Responsable","Prioridad","Estado","Avance %","Cumplimiento %","Etapas","Etapas completadas","Etapas vencidas","Próxima fecha","Fecha inicio","Fecha fin prevista","Presupuesto estimado (USD)","Nota de presupuesto","Descripción"];
+    var q=csvQ;
+    var lines=[head.map(q).join(",")];
+    proyFiltrados().forEach(function(pr){
+      var m=proyMetricas(pr);
+      lines.push([pr.nombre,pr.programa,pr.area,pr.sede,pr.responsable,pr.prioridad||"Media",pr.estado||"Planificado",
+        m.avance,(m.cumplimiento===null?"":m.cumplimiento),m.total,m.completadas,m.vencidas,m.proxima,
+        pr.fechaInicio,pr.fechaFin,(pr.presupuesto||""),pr.presupuestoNota,pr.descripcion].map(q).join(","));
+    });
+    download("proyectos-"+stamp()+".csv","﻿"+lines.join("\r\n"),"text/csv;charset=utf-8","CSV de proyectos exportado");
+  }
+  // Añade los 16 puntos sólo si no están ya (por id): repetir la carga no duplica ni
+  // pisa lo que el usuario haya editado. Las fechas quedan vacías a propósito.
+  function sembrarLineasDeVida(){
+    var existentes={}; state.proyectos.forEach(function(pr){ existentes[pr.id]=1; });
+    var nuevos=LV_SEED.filter(function(pr){ return !existentes[pr.id]; });
+    if(!nuevos.length){ alert("El programa Líneas de vida ya está cargado en este dispositivo."); return; }
+    // copia profunda: los objetos de LV_SEED no deben compartir referencia con lo guardado
+    nuevos.forEach(function(pr){ state.proyectos.push(JSON.parse(JSON.stringify(pr))); });
+    saveProyectos(); renderProyectos();
+    toast(nuevos.length+" proyecto"+(nuevos.length===1?"":"s")+" de líneas de vida añadido"+(nuevos.length===1?"":"s"));
   }
   function gestionarFeriados(){
     var actual=ferExtra.slice().sort().join(", ");
@@ -3021,6 +3462,13 @@
     // ---- proyectos ----
     el("proyNewBtn").addEventListener("click",function(){ openProy(null); });
     el("proyFEstado").addEventListener("change",function(){ state.proyFEstado=this.value; renderProyectos(); });
+    el("proyFArea").addEventListener("change",function(){ state.proyFArea=this.value; renderProyectos(); });
+    el("proyFPrioridad").addEventListener("change",function(){ state.proyFPrioridad=this.value; renderProyectos(); });
+    el("proyToggleAgrupar").addEventListener("click",function(){
+      state.proyAgrupado=!state.proyAgrupado;
+      this.textContent = state.proyAgrupado ? "Ver como lista" : "Agrupar por área";
+      renderProyectos();
+    });
     el("pcloseSheet").addEventListener("click",closeProy);
     el("psaveBtn").addEventListener("click",saveProyForm);
     el("pdelBtn").addEventListener("click",delProy);
@@ -3103,6 +3551,8 @@
     el("setFeriados").addEventListener("click",gestionarFeriados);
     el("setVerFeriados").addEventListener("click",verFeriados);
     el("setAccCSV").addEventListener("click",exportAccCSV);
+    el("setSeedLV").addEventListener("click",sembrarLineasDeVida);
+    el("setProyCSV").addEventListener("click",exportProyCSV);
     el("saveBtn").addEventListener("click",saveForm);
     el("delBtn").addEventListener("click",delItem);
     el("form").addEventListener("submit",function(e){ e.preventDefault(); saveForm(); });

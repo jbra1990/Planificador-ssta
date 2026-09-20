@@ -29,6 +29,19 @@ Pages — ver más abajo)*
   sirve para cualquier año. La app muestra qué feriados descontó.
 - Orden por proximidad de vencimiento y **alerta cuando faltan 3 días hábiles o menos**.
 
+**Proyectos**
+- Proyectos con etapas, responsable, presupuesto y evidencias (fotos y notas por etapa).
+- Avance (etapas completadas) y cumplimiento (etapas cerradas dentro de plazo) se miden por
+  separado, porque un proyecto puede llegar al 100 % de avance habiendo incumplido todas
+  las fechas.
+- Semáforo de riesgo (rojo/ámbar/verde) por proyecto y vista **agrupada por área**, con
+  progreso agregado — un tablero ejecutivo de portafolio, no sólo una lista.
+- Panel de **próximos vencimientos** y **presupuesto estimado del programa**, con filtros
+  por área, prioridad y estado. Exportación a CSV para reportar a dirección.
+- Programas: proyectos relacionados se agrupan bajo un mismo nombre de programa (por
+  ejemplo, un levantamiento de riesgos con muchos puntos de instalación) para verlos y
+  reportarlos en conjunto.
+
 ## Activar el sitio (GitHub Pages)
 
 1. En este repositorio: **Settings → Pages**.
