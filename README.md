@@ -39,8 +39,11 @@ Pages — ver más abajo)*
 - Panel de **próximos vencimientos** y **presupuesto estimado del programa**, con filtros
   por área, prioridad y estado. Exportación a CSV para reportar a dirección.
 - Programas: proyectos relacionados se agrupan bajo un mismo nombre de programa (por
-  ejemplo, un levantamiento de riesgos con muchos puntos de instalación) para verlos y
-  reportarlos en conjunto.
+  ejemplo, un levantamiento de riesgos con muchos puntos de instalación, o los planes de
+  acción que salen de investigar un evento) para verlos y reportarlos en conjunto.
+- **Análisis** trae también un resumen ejecutivo de Proyectos: semáforo RAG, distribución
+  por estado, avance por área y próximos vencimientos de todo el portafolio, además de lo
+  ya existente para Actividades.
 
 ## Activar el sitio (GitHub Pages)
 

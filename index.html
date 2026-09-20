@@ -374,7 +374,7 @@
   .donut-seg { transition: opacity .15s; cursor: pointer; }
   .donut-box.dim .donut-seg:not(.hot) { opacity: .28; }
 
-  .mini-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
+  .mini-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 15px; }
   .mini { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 15px 16px; }
   .mini .l { font-size: 11.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 650; }
   .mini .v { font-size: 27px; font-weight: 800; letter-spacing: -.02em; margin-top: 6px; }
@@ -472,6 +472,21 @@
   .hito-pr { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
   .hito-fecha { font-family: var(--mono); font-size: 12px; color: var(--ink-2); white-space: nowrap; }
   .proy-vacio-hitos { font-size: 13px; color: var(--muted); padding: 4px 0; }
+
+  /* Análisis: avance por área (fila con semáforo + barra) y leyendas no interactivas —
+     mismo estilo visual que .lg-item pero sin comportamiento de filtro al hacer clic,
+     porque aquí no hay un tablero de actividades detrás para filtrar. */
+  .an-area-row { display: flex; align-items: center; gap: 10px; padding: 9px 2px; }
+  .an-area-row + .an-area-row { border-top: 1px solid var(--border); }
+  .an-area-nm { flex: 1; min-width: 0; font-size: 13.5px; font-weight: 650; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .an-area-ct { font-family: var(--mono); font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+  .an-area-row .barra { width: 84px; flex: 0 0 auto; }
+  .an-area-pc { font-family: var(--mono); font-size: 13px; font-weight: 800; color: var(--ink); min-width: 38px; text-align: right; }
+  .lg-item2 { display: flex; align-items: center; gap: 10px; padding: 8px 9px; }
+  .lg-item2 .sw { width: 11px; height: 11px; border-radius: 3px; flex: 0 0 auto; box-shadow: 0 0 8px var(--sw,transparent); }
+  .lg-item2 .nm { font-size: 13px; font-weight: 600; color: var(--ink-2); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lg-item2 .ct { font-family: var(--mono); font-size: 12.5px; color: var(--muted); }
+  .lg-item2 .pc { font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--ink); min-width: 42px; text-align: right; }
 
   /* detalle */
   .volver { background: none; border: none; color: var(--cyan); font-weight: 700; font-size: 14px; padding: 4px 0 12px; }
@@ -901,7 +916,7 @@
 
     <!-- ============ ANÁLISIS ============ -->
     <section class="screen" id="s-analisis" hidden>
-      <div class="sub-eyebrow">Resumen general</div>
+      <div class="sub-eyebrow">Resumen ejecutivo · Actividades (Planner)</div>
       <div class="mini-stats" id="miniStats"></div>
       <div class="panel">
         <div class="panel-h"><h3>Distribución por estatus</h3><span class="tot" id="totEstatus"></span></div>
@@ -918,6 +933,35 @@
           <div class="donut-box" id="donutTipo"></div>
           <div class="legend" id="legTipo"></div>
         </div>
+      </div>
+
+      <div class="sub-eyebrow" style="margin-top:28px">Resumen ejecutivo · Proyectos</div>
+      <div class="mini-stats" id="miniStatsProy"></div>
+      <div class="panel">
+        <div class="panel-h"><h3>Semáforo de riesgo</h3><span class="tot" id="totRAG"></span></div>
+        <div class="panel-sub">Cuántos proyectos necesitan atención ahora mismo (RAG)</div>
+        <div class="chart-wrap">
+          <div class="donut-box" id="donutRAG"></div>
+          <div class="legend" id="legRAG"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><h3>Distribución por estado</h3><span class="tot" id="totEstadoProy"></span></div>
+        <div class="panel-sub">En qué fase está cada proyecto</div>
+        <div class="chart-wrap">
+          <div class="donut-box" id="donutEstadoProy"></div>
+          <div class="legend" id="legEstadoProy"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><h3>Avance por área</h3><span class="tot" id="totAreaProy"></span></div>
+        <div class="panel-sub">Promedio de avance de los proyectos de cada área, peor semáforo primero</div>
+        <div id="areaProyList"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><h3>Próximos vencimientos</h3></div>
+        <div class="panel-sub">Las etapas más próximas a vencer en todo el portafolio</div>
+        <div id="anProyHitos"></div>
       </div>
     </section>
 
@@ -1000,6 +1044,11 @@
         <button class="set-row" id="setSeedLV" style="width:100%;text-align:left">
           <span class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v10"/><path d="M8 7l4-4 4 4"/><rect x="3" y="13" width="18" height="8" rx="2"/></svg></span>
           <span class="st"><span class="t">Cargar programa Líneas de vida</span><span class="d">Añade los 16 puntos del levantamiento como proyectos, con etapas y fechas por definir</span></span>
+          <span class="chev">›</span>
+        </button>
+        <button class="set-row" id="setSeedViola3" style="width:100%;text-align:left">
+          <span class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v10"/><path d="M8 7l4-4 4 4"/><rect x="3" y="13" width="18" height="8" rx="2"/></svg></span>
+          <span class="st"><span class="t">Cargar plan de acción: conato Viola 3</span><span class="d">Añade el plan de acción por causa raíz como proyecto, con una etapa por hallazgo</span></span>
           <span class="chev">›</span>
         </button>
         <button class="set-row" id="setProyCSV" style="width:100%;text-align:left">
@@ -1670,6 +1719,79 @@
     legend("legTipo", tSegs, total, "tipo");
   }
 
+  // ---------- análisis: proyectos (portafolio ejecutivo) ----------
+  // Fila de "avance por área": mismo semáforo peor-caso y orden que la vista agrupada
+  // de Proyectos, para que ambas pantallas cuenten la misma historia.
+  function areaRowHTML(area, lista){
+    var avg=Math.round(lista.reduce(function(a,p){ return a+proyMetricas(p).avance; },0)/lista.length);
+    var peor=lista.reduce(function(p,pr){ var r=proyRAG(pr).nivel; return RAG_RANK[r]<RAG_RANK[p]?r:p; }, "verde");
+    return '<div class="an-area-row">'+
+      '<span class="rag-dot rag-'+peor+'"></span>'+
+      '<span class="an-area-nm">'+esc(area)+'</span>'+
+      '<span class="an-area-ct">'+lista.length+' proy.</span>'+
+      barraHTML(avg,"av")+
+      '<span class="an-area-pc tabnum">'+avg+'%</span>'+
+    '</div>';
+  }
+  // Leyenda sin clic: aquí no hay un tablero de actividades que filtrar detrás, así que
+  // se usa una clase propia (.lg-item2) en vez de .lg-item para no disparar por accidente
+  // el filtro de estatus/tipo que sí escucha el clic global sobre .lg-item.
+  function legendProy(legId, segs, total){
+    el(legId).innerHTML=segs.filter(function(s){return s.value>0;}).map(function(s){
+      var pc=total?Math.round(s.value/total*100):0;
+      return '<div class="lg-item2" style="--sw:'+s.color+'">'+
+        '<span class="sw" style="background:'+s.color+'"></span>'+
+        '<span class="nm">'+esc(s.short||s.label)+'</span>'+
+        '<span class="ct">'+s.value+'</span>'+
+        '<span class="pc">'+pc+'%</span></div>';
+    }).join("") || '<div class="col-empty">Sin datos</div>';
+  }
+  function renderAnalyticsProy(){
+    var tot=state.proyectos.length;
+    var activos=state.proyectos.filter(function(pr){ return (pr.estado||"Planificado")!=="Completado"; });
+    var avg = activos.length ? Math.round(activos.reduce(function(a,pr){ return a+proyMetricas(pr).avance; },0)/activos.length) : 0;
+    var ragCount={rojo:0,ambar:0,verde:0}; state.proyectos.forEach(function(pr){ ragCount[proyRAG(pr).nivel]++; });
+    var evs=[]; state.proyectos.forEach(function(pr){ var m=proyMetricas(pr); if(m.cumplimiento!==null) evs.push(m.cumplimiento); });
+    var cum = evs.length ? Math.round(evs.reduce(function(a,b){return a+b;},0)/evs.length) : null;
+    var conPpto=state.proyectos.filter(function(pr){ return typeof pr.presupuesto==="number" && pr.presupuesto>0; });
+    var totPpto=conPpto.reduce(function(a,pr){ return a+pr.presupuesto; },0);
+
+    el("miniStatsProy").innerHTML=
+      '<div class="mini"><div class="l">Proyectos</div><div class="v tabnum">'+tot+'</div></div>'+
+      '<div class="mini"><div class="l">Avance del programa</div><div class="v tabnum" style="color:var(--cyan)">'+avg+'%</div></div>'+
+      '<div class="mini"><div class="l">En riesgo</div><div class="v tabnum" style="color:'+(ragCount.rojo?"var(--st-late)":"var(--ink)")+'">'+ragCount.rojo+'</div></div>'+
+      '<div class="mini"><div class="l">Cumplimiento</div><div class="v tabnum">'+(cum===null?"—":cum+"%")+'</div></div>'+
+      '<div class="mini"><div class="l">Presupuesto estimado</div><div class="v tabnum" style="font-size:21px">'+fmtUSD(totPpto)+'</div></div>';
+
+    var ragSegs=[
+      { label:"Rojo — necesita atención", short:"Rojo", value:ragCount.rojo, color:"var(--st-late)" },
+      { label:"Ámbar — vigilar", short:"Ámbar", value:ragCount.ambar, color:"var(--st-proc)" },
+      { label:"Verde — en curso normal", short:"Verde", value:ragCount.verde, color:"var(--st-plan)" }
+    ];
+    el("totRAG").textContent = tot+" proyecto"+(tot===1?"":"s");
+    donut("donutRAG", ragSegs, tot, "Proyectos");
+    legendProy("legRAG", ragSegs, tot);
+
+    var estSegs=PROY_ESTADOS.map(function(es){
+      var v=state.proyectos.filter(function(pr){ return (pr.estado||"Planificado")===es; }).length;
+      return { label:es, short:es, value:v, color:ESTADO_PROY_COLOR[es]||"var(--muted)" };
+    });
+    el("totEstadoProy").textContent = tot+" proyecto"+(tot===1?"":"s");
+    donut("donutEstadoProy", estSegs, tot, "Proyectos");
+    legendProy("legEstadoProy", estSegs, tot);
+
+    var ag=proyAgruparPorArea(state.proyectos);
+    el("totAreaProy").textContent = ag.orden.length+" área"+(ag.orden.length===1?"":"s");
+    el("areaProyList").innerHTML = ag.orden.length
+      ? ag.orden.map(function(a){ return areaRowHTML(a, ag.groups[a]); }).join("")
+      : '<div class="col-empty">Aún no hay proyectos registrados.</div>';
+
+    var hitos=proyProximosHitos(5);
+    el("anProyHitos").innerHTML = hitos.length
+      ? hitos.map(hitoRowHTML).join("")
+      : '<div class="proy-vacio-hitos">Sin vencimientos próximos registrados.</div>';
+  }
+
   // ---------- alert / bell ----------
   function renderAlert(){
     var over=state.items.filter(isOverdue), n=over.length;
@@ -2278,6 +2400,7 @@
   // Mismos tres niveles y colores que las actividades (PRI_META/priRank): un proyecto no
   // tiene una escala de prioridad distinta a la del resto de la app.
   var PROY_PRIORIDADES=["Alta","Media","Baja"];
+  var ESTADO_PROY_COLOR={ "Planificado":"var(--blue)", "En ejecución":"var(--st-proc)", "Suspendido":"var(--st-wait)", "Completado":"var(--st-plan)" };
 
   // Datos del levantamiento "Líneas de vida 2026": 16 puntos de riesgo de caída de altura,
   // uno por proyecto, con ids fijos para que "Cargar programa" sea idempotente en cada
@@ -2475,6 +2598,30 @@
         { id:'lv16-e3', nombre:'Aprobación de presupuesto', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
         { id:'lv16-e4', nombre:'Instalación y montaje', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
         { id:'lv16-e5', nombre:'Certificación y capacitación', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'', notas:'', evidencias:[] },
+      ] },
+  ];
+
+  // Investigación del conato de incendio en el molino Viola 3: cada hallazgo de la tabla
+  // de causa raíz se vuelve una etapa, con la evidencia, la relación con el evento y la
+  // acción requerida en sus notas. Mismo id fijo que Líneas de vida: cargarlo dos veces,
+  // o en dos dispositivos antes de sincronizar, no duplica el proyecto.
+  var EV_VIOLA3_SEED=[
+    { id:'ev-viola3-01', nombre:'Conato de incendio — Molino Viola 3: plan de acción por causa raíz',
+      descripcion:'El conato de incendio se originó por calentamiento generado por fricción mecánica, asociado a una acumulación de celulosa en la zona de desfibrado, entre la barra de corte y la estructura del molino. Esta acumulación pudo incrementar la fricción y generar un punto localizado de alta temperatura, provocando la ignición de la celulosa.\n\nDurante la inspección posterior al evento se identificó desgaste irregular de la barra de corte, más pronunciado en uno de sus lados. Este hallazgo evidencia una condición no uniforme de operación entre la barra y el rotor. Se considera un factor potencialmente contribuyente que requiere revisión de alineación, holguras y condición mecánica del conjunto.\n\nEl evento pudo evolucionar debido a que el molino Viola 3, por su diseño y antigüedad, no dispone de protecciones suficientes para detectar oportunamente condiciones anormales de operación. Actualmente no se monitorea la temperatura de los cojinetes y soportes del rotor ni la temperatura a la salida del molino, por lo que un incremento anormal de temperatura puede desarrollarse sin generar una alarma o parada preventiva.\n\nAdicionalmente, no se ha verificado que el sistema actual de aspiración proporcione el caudal necesario para remover adecuadamente las pelusas y mantener la concentración de polvo dentro de condiciones seguras. Tampoco se encuentra caracterizada la generación de partículas finas de celulosa (<0,2 mm) ni su concentración en el flujo de aire.\n\nComo factores adicionales que pudieron favorecer el desarrollo y propagación del evento se consideran la temperatura del cuarto del molino y la presencia de material combustible acumulado en el equipo y su entorno.',
+      responsable:'', sede:'', area:'', programa:'Planes de acción — Investigación de eventos',
+      prioridad:'Alta', presupuesto:null, presupuestoNota:'',
+      fechaInicio:'', fechaFin:'', estado:'En ejecución',
+      etapas:[
+        { id:'ev-viola3-01-e1', nombre:'Revisar alineación, holguras y desgaste de la barra de corte', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'',
+          notas:'Evidencia: desgaste asimétrico observado en la barra de corte.\nRelación con el evento: puede producir holgura no uniforme y favorecer fricción localizada / desfibrado irregular.\nAcción requerida: incluir en el plan de mantenimiento la revisión con una frecuencia establecida; medir paralelismo, alineación y holgura barra–rotor en toda la longitud; considerar el espesor mínimo requerido (3 láminas de celulosa) para evitar atascamiento.\nPrioridad original de la tabla: Crítica.', evidencias:[] },
+        { id:'ev-viola3-01-e2', nombre:'Instalar sensores de temperatura en los cojinetes del rotor', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'',
+          notas:'Evidencia: la Viola 3 no cuenta con sensores de temperatura.\nRelación con el evento: el sobrecalentamiento no es detectable con la instrumentación actual.\nAcción requerida: sensores en ambos soportes, con alarma y parada automática.\nPrioridad original de la tabla: Crítica.', evidencias:[] },
+        { id:'ev-viola3-01-e3', nombre:'Instalar sensor de temperatura de salida y acondicionar el cuarto del molino', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'',
+          notas:'Evidencia: la Viola 3 no tiene medición de temperatura de salida.\nRelación con el evento: no se conoce el régimen térmico del proceso; según el tipo de material, la temperatura de la mezcla a la salida no debe superar los 70 °C, porque a partir de ahí empieza la ignición.\nAcción requerida: instalar sensor de temperatura de salida y acondicionar el cuarto del molino para garantizar una operación segura.\nPrioridad original de la tabla: Crítica.', evidencias:[] },
+        { id:'ev-viola3-01-e4', nombre:'Caracterizar la granulometría del polvo fino', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'',
+          notas:'Evidencia: no existe caracterización granulométrica del polvo.\nRelación con el evento: se desconoce la fracción menor a 0,2 mm; las partículas menores a 0,2 mm son polvos con alto rango de inflamabilidad.\nAcción requerida: realizar la caracterización granulométrica del polvo generado.\nPrioridad original de la tabla: Alta.', evidencias:[] },
+        { id:'ev-viola3-01-e5', nombre:'Evaluar y asegurar la capacidad del sistema de aspiración', responsable:'', fechaCump:'', estado:'Pendiente', fechaCierre:'',
+          notas:'Evidencia: no hay medición de la capacidad de aspiración actual.\nRelación con el evento: el caudal de aspiración debe cumplir con una dilución de polvos de celulosa menor a 7,5 g/m³.\nAcción requerida: medir caudal, velocidad y presión del sistema; determinar la concentración de polvo en el flujo de aire; revisar si es necesario cambiar el ventilador actual de la Viola 3; definir si es posible encapsular el equipo para no permitir la salida ni acumulación de pelusa.\nPrioridad original de la tabla: Crítica.', evidencias:[] },
       ] },
   ];
 
@@ -2679,6 +2826,7 @@
     el("proyLista").hidden = !!state.proyAbierto;
     el("proyDetalle").hidden = !state.proyAbierto;
     actualizarFab();
+    renderAnalyticsProy();          // el resumen ejecutivo de Análisis se actualiza con cualquier cambio en Proyectos
     if(state.proyAbierto){ renderProyDetalle(); return; }
 
     // el filtro de área depende de qué proyectos existen; se rehace en cada render
@@ -3060,6 +3208,14 @@
     nuevos.forEach(function(pr){ state.proyectos.push(JSON.parse(JSON.stringify(pr))); });
     saveProyectos(); renderProyectos();
     toast(nuevos.length+" proyecto"+(nuevos.length===1?"":"s")+" de líneas de vida añadido"+(nuevos.length===1?"":"s"));
+  }
+  function sembrarInvestigacionViola3(){
+    var existentes={}; state.proyectos.forEach(function(pr){ existentes[pr.id]=1; });
+    var nuevos=EV_VIOLA3_SEED.filter(function(pr){ return !existentes[pr.id]; });
+    if(!nuevos.length){ alert("El plan de acción del conato en Viola 3 ya está cargado en este dispositivo."); return; }
+    nuevos.forEach(function(pr){ state.proyectos.push(JSON.parse(JSON.stringify(pr))); });
+    saveProyectos(); renderProyectos();
+    toast("Plan de acción de Viola 3 añadido a Proyectos");
   }
   function gestionarFeriados(){
     var actual=ferExtra.slice().sort().join(", ");
@@ -3484,6 +3640,12 @@
     el("pdNuevaEtapa").addEventListener("click",function(){ if(state.proyAbierto) openEtapa(state.proyAbierto,null); });
     el("evFile").addEventListener("change",function(){ agregarFotos(this.files); this.value=""; });
 
+    // Desde el resumen ejecutivo de Análisis, "Próximos vencimientos" también abre el
+    // proyecto — pero ahí hace falta cambiar de pestaña, porque #s-proyectos empieza oculto.
+    el("s-analisis").addEventListener("click",function(e){
+      var t=e.target.closest("[data-proyopen]");
+      if(t){ state.proyAbierto=t.getAttribute("data-proyopen"); setTab("proyectos"); renderProyectos(); window.scrollTo({top:0,behavior:"smooth"}); }
+    });
     el("s-proyectos").addEventListener("click",function(e){
       var t;
       if(e.target.closest("#pdPrimeraEtapa")){ if(state.proyAbierto) openEtapa(state.proyAbierto,null); return; }
@@ -3552,6 +3714,7 @@
     el("setVerFeriados").addEventListener("click",verFeriados);
     el("setAccCSV").addEventListener("click",exportAccCSV);
     el("setSeedLV").addEventListener("click",sembrarLineasDeVida);
+    el("setSeedViola3").addEventListener("click",sembrarInvestigacionViola3);
     el("setProyCSV").addEventListener("click",exportProyCSV);
     el("saveBtn").addEventListener("click",saveForm);
     el("delBtn").addEventListener("click",delItem);
