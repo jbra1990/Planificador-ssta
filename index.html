@@ -667,14 +667,18 @@
   /* ---------- Bottom sheet form ---------- */
   .overlay { position: fixed; inset: 0; background: rgba(3,6,12,.6); backdrop-filter: blur(3px); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 40; }
   .overlay.open { opacity: 1; pointer-events: auto; }
+  /* Sin transform: un transform en un ancestro rompe en iOS/WebKit la posición del
+     selector nativo de fecha y de <select> (el "cuadro de diálogo" aparece fuera de
+     pantalla). El centrado horizontal usa left/right + margin auto, y la animación de
+     apertura anima "bottom" en vez de translateY — ninguno de los dos es un transform. */
   .sheet {
-    position: fixed; left: 50%; transform: translate(-50%, 100%); bottom: 0; width: min(560px, 100%);
+    position: fixed; left: 0; right: 0; margin: 0 auto; bottom: -100vh; width: min(560px, 100%);
     max-height: 94vh; background: rgba(15,28,52,.93); border: 1px solid var(--border-2); border-bottom: none;
     backdrop-filter: var(--blur-lg); -webkit-backdrop-filter: var(--blur-lg);
     border-radius: 24px 24px 0 0; box-shadow: 0 -20px 60px rgba(0,0,0,.5); z-index: 50;
-    display: flex; flex-direction: column; transition: transform .26s cubic-bezier(.4,0,.2,1);
+    display: flex; flex-direction: column; transition: bottom .26s cubic-bezier(.4,0,.2,1);
   }
-  .sheet.open { transform: translate(-50%, 0); }
+  .sheet.open { bottom: 0; }
   @media (prefers-reduced-motion: reduce) { .sheet, .overlay { transition: none; } }
   .grab { width: 42px; height: 5px; border-radius: 999px; background: var(--border-2); margin: 10px auto 0; }
   .sheet-h { display: flex; align-items: center; justify-content: space-between; padding: 8px 20px 14px; }
@@ -3688,15 +3692,15 @@
   function bindSheetSwipe(){
     var sh=el("sheet"), startY=null, cur=0;
     function s(e){ startY=e.touches[0].clientY; cur=0; sh.style.transition="none"; }
-    function m(e){ if(startY===null) return; cur=e.touches[0].clientY-startY; if(cur>0) sh.style.transform="translate(-50%,"+cur+"px)"; }
-    function e_(){ if(startY===null) return; sh.style.transition=""; sh.style.transform=""; if(cur>90) closeSheet(); startY=null; }
+    function m(e){ if(startY===null) return; cur=e.touches[0].clientY-startY; if(cur>0) sh.style.bottom=(-cur)+"px"; }
+    function e_(){ if(startY===null) return; sh.style.transition=""; sh.style.bottom=""; if(cur>90) closeSheet(); startY=null; }
     [el("grab"), el("sheet").querySelector(".sheet-h")].forEach(function(h){ if(!h) return; h.addEventListener("touchstart",s,{passive:true}); h.addEventListener("touchmove",m,{passive:true}); h.addEventListener("touchend",e_); });
   }
   function bindAccSwipe(){
     var sh=el("asheet"), startY=null, cur=0;
     function s(e){ startY=e.touches[0].clientY; cur=0; sh.style.transition="none"; }
-    function m(e){ if(startY===null) return; cur=e.touches[0].clientY-startY; if(cur>0) sh.style.transform="translate(-50%,"+cur+"px)"; }
-    function e_(){ if(startY===null) return; sh.style.transition=""; sh.style.transform=""; if(cur>90) closeAcc(); startY=null; }
+    function m(e){ if(startY===null) return; cur=e.touches[0].clientY-startY; if(cur>0) sh.style.bottom=(-cur)+"px"; }
+    function e_(){ if(startY===null) return; sh.style.transition=""; sh.style.bottom=""; if(cur>90) closeAcc(); startY=null; }
     [el("agrab"), sh.querySelector(".sheet-h")].forEach(function(h){ if(!h) return; h.addEventListener("touchstart",s,{passive:true}); h.addEventListener("touchmove",m,{passive:true}); h.addEventListener("touchend",e_); });
   }
   function bind(){
