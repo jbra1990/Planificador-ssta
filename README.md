@@ -28,6 +28,9 @@ Pages — ver más abajo)*
   (Carnaval y Viernes Santo) se calculan a partir del domingo de Pascua, así que el cálculo
   sirve para cualquier año. La app muestra qué feriados descontó.
 - Orden por proximidad de vencimiento y **alerta cuando faltan 3 días hábiles o menos**.
+- Cada evento puede marcarse **Reportado** o **No se reporta** (cuando se decide que no
+  sigue el trámite): en ambos casos deja de contar el plazo y se archiva fuera de la
+  vista por defecto, disponible filtrando por estado.
 
 **Proyectos**
 - Proyectos con etapas, responsable, presupuesto y evidencias (fotos, PDF y notas por etapa).

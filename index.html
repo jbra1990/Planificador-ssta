@@ -547,7 +547,7 @@
   .acc-card:active { transform: scale(.994); }
   .acc-card.urgente { background: linear-gradient(160deg, rgba(251,191,36,.22), rgba(251,191,36,.08)), var(--card); border-color: rgba(251,191,36,.42); }
   .acc-card.vencido { background: linear-gradient(160deg, rgba(251,110,133,.24), rgba(251,110,133,.09)), var(--card); border-color: rgba(251,110,133,.5); }
-  .acc-card.reportado { opacity: .72; }
+  .acc-card.reportado, .acc-card.archivado { opacity: .72; }
   .acc-top { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-bottom: 11px; }
   .sev-tag { font-family: var(--mono); font-size: 10.5px; font-weight: 800; letter-spacing: .07em; padding: 4px 9px; border-radius: 6px; border: 1px solid; white-space: nowrap; }
   .sede-tag { font-size: 11.5px; font-weight: 650; color: var(--ink-2); background: var(--card-2); border-radius: 999px; padding: 4px 10px; white-space: nowrap; }
@@ -573,14 +573,16 @@
   .acc-acts .acc-btn { margin-left: 0; }
   .acc-btn.pdf { border-color: var(--border-2); background: var(--card-2); color: var(--ink-2); padding: 9px 12px; }
   .acc-btn.pdf:hover { color: var(--ink); border-color: var(--cyan); background: rgba(53,224,240,.12); }
-  /* Interruptor de dos estados: se ve cuál está activo y cuál es la otra opción. */
+  /* Interruptor de tres estados: se ve cuál está activo y cuáles son las otras opciones.
+     Sólo "Reportado" (la del medio) se resalta en verde; "No reportado" y "No se reporta"
+     usan el mismo gris neutro, porque ninguna de las dos es un éxito que celebrar. */
   .rep-tg { display: inline-flex; border: 1px solid var(--border-2); border-radius: 10px; overflow: hidden; }
   .rep-tg .rt { border: none; background: transparent; color: var(--muted); font-size: 12.5px; font-weight: 700; padding: 9px 12px; white-space: nowrap; }
   .rep-tg .rt + .rt { border-left: 1px solid var(--border-2); }
   .rep-tg .rt:hover { color: var(--ink-2); background: rgba(255,255,255,.05); }
   .rep-tg .rt.on { background: rgba(52,211,153,.18); color: var(--st-plan); }
-  .rep-tg .rt:first-child.on { background: rgba(148,163,184,.20); color: var(--ink-2); }
-  @media (max-width: 520px) { .acc-foot { flex-wrap: wrap; } .acc-acts { width: 100%; margin-left: 0; } }
+  .rep-tg .rt:first-child.on, .rep-tg .rt:last-child.on { background: rgba(148,163,184,.20); color: var(--ink-2); }
+  @media (max-width: 520px) { .acc-foot { flex-wrap: wrap; } .acc-acts { width: 100%; margin-left: 0; } .rep-tg .rt { padding: 8px 8px; font-size: 11.5px; } }
 
   .deadline-box { background: var(--card-2); border: 1px solid var(--border-2); border-radius: var(--r-sm); padding: 14px 15px; margin-bottom: 15px; }
   .dl-lab { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 700; }
@@ -926,7 +928,7 @@
           <option value="">Toda localidad</option><option>Matriz</option><option>Regional Norte</option>
         </select></div>
         <div class="chip"><select id="accFEstado" aria-label="Estado">
-          <option value="">Pendientes y reportados</option><option>Pendiente</option><option>Reportado</option>
+          <option value="">Activos (sin archivar)</option><option>Pendiente</option><option>Reportado</option><option>No se reporta</option>
         </select></div>
       </div>
 
@@ -1374,7 +1376,7 @@
       </div>
       <div class="field">
         <label for="a_estado">Estado del reporte</label>
-        <select id="a_estado"><option>Pendiente</option><option>Reportado</option></select>
+        <select id="a_estado"><option>Pendiente</option><option>Reportado</option><option>No se reporta</option></select>
       </div>
       <div class="field" id="aw_freporte" style="display:none">
         <label for="a_freporte">Fecha en que se reportó</label>
@@ -2174,17 +2176,22 @@
   function accConPlazo(a){
     var p=plazoReporte(a.fecha);
     var lim=p?p.iso:"";
-    var rest=(a.estado==="Reportado")?null:(lim?habilesRestantes(lim):null);
+    // "No se reporta" es un archivo, igual que "Reportado": ya se decidió que este evento
+    // no sigue el trámite, así que deja de contar el plazo y de aparecer como atrasado.
+    var archivado=(a.estado==="Reportado"||a.estado==="No se reporta");
+    var rest=archivado?null:(lim?habilesRestantes(lim):null);
     return { limite:lim, feriados:p?p.feriados:[], restantes:rest };
   }
   function accFiltrados(){
     return state.accidentes.filter(function(a){
+      var est=a.estado||"Pendiente";
+      if(state.accFEstado){ if(est!==state.accFEstado) return false; }
+      else if(est==="No se reporta") return false;                // archivado: fuera de la vista por defecto
       if(state.accFTipo && a.tipo!==state.accFTipo) return false;
       if(state.accFSede && a.sede!==state.accFSede) return false;
-      if(state.accFEstado && (a.estado||"Pendiente")!==state.accFEstado) return false;
       return true;
     }).sort(function(x,y){
-      var rx=(x.estado==="Reportado")?1:0, ry=(y.estado==="Reportado")?1:0;
+      var rx=(x.estado&&x.estado!=="Pendiente")?1:0, ry=(y.estado&&y.estado!=="Pendiente")?1:0;
       if(rx!==ry) return rx-ry;                                   // pendientes primero
       var lx=accConPlazo(x).limite||"9999", ly=accConPlazo(y).limite||"9999";
       if(lx!==ly) return lx<ly?-1:1;                              // más próximo a vencer arriba
@@ -2362,17 +2369,20 @@
   }
 
   function accCardHTML(a){
-    var t=accTipo(a.tipo), info=accConPlazo(a), rep=(a.estado==="Reportado");
+    var t=accTipo(a.tipo), info=accConPlazo(a), est=a.estado||"Pendiente";
+    var rep=(est==="Reportado"), noRep=(est==="No se reporta");
     var cls="", cd="", cdCls="", vCls="due";
     if(rep){ cls="reportado"; cd="REPORTADO"; cdCls="ok"; vCls=""; }
+    else if(noRep){ cls="archivado"; cd="NO SE REPORTA"; cdCls=""; vCls=""; }
     else if(info.restantes===null){ cd="SIN FECHA"; }
     else if(info.restantes<0){ cls="vencido"; cd="PLAZO VENCIDO"; cdCls="crit"; vCls="crit"; }
     else if(info.restantes<=3){ cls="urgente"; cd=info.restantes+" DÍA"+(info.restantes===1?"":"S")+" HÁBIL"+(info.restantes===1?"":"ES"); cdCls="warn"; vCls="warn"; }
     else { cd=info.restantes+" DÍAS HÁBILES"; }
     var btn =
       '<span class="rep-tg">'+
-        '<button class="rt'+(rep?"":" on")+'" data-accestado="'+a.id+'" data-val="0">No reportado</button>'+
-        '<button class="rt'+(rep?" on":"")+'" data-accestado="'+a.id+'" data-val="1">Reportado</button>'+
+        '<button class="rt'+(est==="Pendiente"?" on":"")+'" data-accestado="'+a.id+'" data-val="Pendiente">No reportado</button>'+
+        '<button class="rt'+(rep?" on":"")+'" data-accestado="'+a.id+'" data-val="Reportado">Reportado</button>'+
+        '<button class="rt'+(noRep?" on":"")+'" data-accestado="'+a.id+'" data-val="No se reporta" title="Se decidió que este evento no se reporta: deja de contar como atrasado y se archiva">No se reporta</button>'+
       '</span>';
     var pdf='<button class="acc-btn pdf" data-accpdf="'+a.id+'" title="Genera el PDF del reporte para compartir">'+
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="M9 15l3-3 3 3"/></svg>PDF</button>';
@@ -3259,13 +3269,16 @@
     state.accidentes=state.accidentes.filter(function(a){ return a.id!==editingAcc; });
     saveAcc(); renderAccidentes(); closeAcc(); toast("Registro eliminado");
   }
-  function marcarReportado(id,rep){
+  function marcarEstadoAcc(id, estado){
     for(var i=0;i<state.accidentes.length;i++){ if(state.accidentes[i].id===id){
-      if((state.accidentes[i].estado==="Reportado")===rep) return;   // ya estaba en ese estado
-      state.accidentes[i].estado = rep?"Reportado":"Pendiente";
-      state.accidentes[i].fechaReporte = rep?todayISO():"";
+      if((state.accidentes[i].estado||"Pendiente")===estado) return;   // ya estaba en ese estado
+      state.accidentes[i].estado = estado;
+      state.accidentes[i].fechaReporte = (estado==="Reportado")?todayISO():"";
       break; } }
-    saveAcc(); renderAccidentes(); toast(rep?"Marcado como reportado ✓":"Marcado como no reportado");
+    saveAcc(); renderAccidentes();
+    toast(estado==="Reportado" ? "Marcado como reportado ✓"
+        : estado==="No se reporta" ? "No se reporta: se archivó y deja de contar como atrasado"
+        : "Marcado como no reportado");
   }
   function exportAccCSV(){
     if(!state.accidentes.length){ alert("Aún no hay eventos registrados."); return; }
@@ -3846,7 +3859,7 @@
     document.addEventListener("click",function(e){
       var ap=e.target.closest("[data-accpdf]"); if(ap){ compartirPDFEvento(ap.getAttribute("data-accpdf")); return; }
       var ae=e.target.closest("[data-accestado]");
-      if(ae){ marcarReportado(ae.getAttribute("data-accestado"), ae.getAttribute("data-val")==="1"); return; }
+      if(ae){ marcarEstadoAcc(ae.getAttribute("data-accestado"), ae.getAttribute("data-val")); return; }
       var ac=e.target.closest("[data-accid]");
       if(ac){ var acc=state.accidentes.filter(function(x){return x.id===ac.getAttribute("data-accid");})[0]; if(acc) openAcc(acc); return; }
       var cb=e.target.closest("[data-complete]"); if(cb){ completeItem(cb.getAttribute("data-complete")); return; }
