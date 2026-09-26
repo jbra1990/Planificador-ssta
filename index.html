@@ -709,6 +709,15 @@
   .chk span { font-size: 13px; color: var(--ink-2); font-weight: 600; }
   .chk em { display: block; font-style: normal; font-weight: 400; font-size: 12px; color: var(--muted); margin-top: 3px; }
   .frow { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  /* Los pares de <select> (estatus/prioridad, etc.) se ven como un segmentador: el valor
+     centrado en su caja, no pegado a la izquierda. */
+  .frow select { text-align: center; }
+  /* Los pares de fecha se aprietan demasiado en un celular angosto — el propio input[type=date]
+     nativo no tiene espacio para el día, mes y año y se nota como una línea partiendo la caja
+     al medio. En vez de forzar ese apriete, cada fecha va en su propia fila. */
+  @media (max-width: 560px) {
+    .frow.frow-fecha { grid-template-columns: 1fr; gap: 14px; }
+  }
   .field.invalid input, .field.invalid select { border-color: var(--st-late); }
   .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
   /* editor de subactividades en el formulario */
@@ -1149,7 +1158,7 @@
         <label for="f_resp">Responsable</label>
         <input type="text" id="f_resp" placeholder="Ej. Carlos Ruiz" />
       </div>
-      <div class="frow">
+      <div class="frow frow-fecha">
         <div class="field"><label for="f_fecha">Fecha de registro <span class="req">*</span></label><input type="date" id="f_fecha" /></div>
         <div class="field"><label for="f_cierre">Cierre tentativo</label><input type="date" id="f_cierre" /></div>
       </div>
@@ -1239,13 +1248,11 @@
         <input type="text" id="p_area" placeholder="Área" />
       </div>
     </div>
-    <div class="field"><label for="p_ini">Fechas</label>
-      <div class="frow">
-        <input type="date" id="p_ini" aria-label="Fecha de inicio" />
-        <input type="date" id="p_fin" aria-label="Fecha de fin prevista" />
-      </div>
-      <div class="hint">Inicio y fin previsto del proyecto completo.</div>
+    <div class="frow frow-fecha">
+      <div class="field"><label for="p_ini">Inicio</label><input type="date" id="p_ini" /></div>
+      <div class="field"><label for="p_fin">Fin previsto</label><input type="date" id="p_fin" /></div>
     </div>
+    <div class="hint" style="margin:-9px 0 15px">Inicio y fin previsto del proyecto completo.</div>
     <div class="field">
       <label for="p_pri">Prioridad</label>
       <div class="frow">
@@ -1326,7 +1333,7 @@
     <form id="aform" novalidate>
       <div class="field" id="aw_fecha">
         <label for="a_fecha">1. Fecha y hora <span class="req">*</span></label>
-        <div class="frow">
+        <div class="frow frow-fecha">
           <input type="date" id="a_fecha" />
           <input type="time" id="a_hora" />
         </div>
